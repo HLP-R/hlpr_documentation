@@ -1,4 +1,4 @@
-*Important Notice: this is a condensed version of setup instructions. For details, refer to the [`stanley_vector1` wiki page](https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions)
+*Important Notice: this is a condensed version of setup instructions. For details, refer to [Stanley wiki page for vector](https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions).
 
 #Install ROS
 - `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
