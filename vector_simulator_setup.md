@@ -17,7 +17,7 @@
 #Create a Software folder (optional)
 - `mkdir ~/Software`
 
-#Freenect2
+#Install Freenect2
 - `cd ~/Software`
 - `git clone https://github.com/OpenKinect/libfreenect2.git`
 - `cd libfreenect2`
@@ -35,7 +35,7 @@
 #Install NLOpt
 - `sudo apt-get install libnlopt-dev`
 
-#Vector Install
+#Install Vector 
 - `mkdir -p ~/Software/stanley`
 - `cd ~/Software/stanley`
 - `git clone git@github.com:StanleyInnovation/vector_v1.git`
@@ -60,7 +60,7 @@
 </library>
 `
 
-#HLP-R Manipulation Stack
+#Install HLP-R Manipulation Stack
 - `sudo apt-get install ros-indigo-ecl-geometry`
 - `sudo apt-get install ros-indigo-moveit-full`
 - `cd ~/Software`
@@ -81,13 +81,13 @@
 - `ln -s ~/Software/HLP-R/hlpr_manipulation/ ~/vector_ws/src/ `
 
 
-#HLP-R Simulation stack
+#Install HLP-R Simulation stack
 - `cd ~/Software/HLP-R`
 - `git clone git@github.com:HLP-R/hlpr_simulator.git`
 - `ln -s ~/Software/HLP-R/hlpr_simulator/ ~/vector_ws/src/ `
 
 
-#Navigation
+#Install Navigation Packages
 - `sudo apt-get install ros-indigo-navigation`
 - `sudo apt-get install ros-indigo-slam-gmapping`
 - For simulation, edit ~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh and change line 27 to "export VECTOR_USE_PLATFORM_ODOMETRY=false"
