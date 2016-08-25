@@ -1,4 +1,4 @@
-*Notice: this is a condensed version of setup instructions. For details, refer to the stanley_vector1 wiki page: https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions
+*Important Notice: this is a condensed version of setup instructions. For details, refer to the [`stanley_vector1` wiki page](https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions).
 
 #Install ROS
 - `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
@@ -42,8 +42,8 @@
 - `mkdir -p ~/vector_ws/src`
 - `ln -s ~/Software/stanley/vector_v1/ ~/vector_ws/src/`
 - `vi ~/vector_ws/src/vector_v1/vector_network/env-hooks/50.vector_network_config.sh`
-- For simulation, uncomment "export ROBOT_NETWORK=eth0" and comment out "export ROBOT_NETWORK=br0"
-- For two arms, edit ~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh accordingly (set VECTOR_HAS_TWO_KINOVA_ARMS and VECTOR_HAS_TWO_ROBOTIQ_GRIPPERS to true)
+- For simulation, uncomment `export ROBOT_NETWORK=eth0` and comment out `export ROBOT_NETWORK=br0`
+- For two arms, edit `~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh` accordingly (set `VECTOR_HAS_TWO_KINOVA_ARMS` and `VECTOR_HAS_TWO_ROBOTIQ_GRIPPERS` to `true`)
 - `cd ~/vector_ws/src`
 - `catkin_init_workspace`
 
@@ -90,11 +90,11 @@
 #Install Navigation Packages
 - `sudo apt-get install ros-indigo-navigation`
 - `sudo apt-get install ros-indigo-slam-gmapping`
-- For simulation, edit ~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh and change line 27 to "export VECTOR_USE_PLATFORM_ODOMETRY=false"
+- For simulation, edit `~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh` and change **line 27** to `export VECTOR_USE_PLATFORM_ODOMETRY=false`
 
 
 #Build and Test
-- Open a new terminal
+- Open a new terminal or source `~/.bashrc`
 - `cd ~/vector_ws`
 - `catkin_make`
 - `source devel/setup.bash`

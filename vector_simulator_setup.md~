@@ -1,4 +1,4 @@
-*Notice: this is a condensed version of setup instructions. For details, refer to the stanley_vector1 wiki page: https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions
+*Important Notice: this is a condensed version of setup instructions. For details, refer to the [`stanley_vector1` wiki page](https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions)
 
 #Install ROS
 - `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
@@ -17,7 +17,7 @@
 #Create a Software folder (optional)
 - `mkdir ~/Software`
 
-#Freenect2
+#Install Freenect2
 - `cd ~/Software`
 - `git clone https://github.com/OpenKinect/libfreenect2.git`
 - `cd libfreenect2`
@@ -35,15 +35,15 @@
 #Install NLOpt
 - `sudo apt-get install libnlopt-dev`
 
-#Vector Install
+#Install Vector 
 - `mkdir -p ~/Software/stanley`
 - `cd ~/Software/stanley`
 - `git clone git@github.com:StanleyInnovation/vector_v1.git`
 - `mkdir -p ~/vector_ws/src`
 - `ln -s ~/Software/stanley/vector_v1/ ~/vector_ws/src/`
 - `vi ~/vector_ws/src/vector_v1/vector_network/env-hooks/50.vector_network_config.sh`
-- For simulation, uncomment "export ROBOT_NETWORK=eth0" and comment out "export ROBOT_NETWORK=br0"
-- For two arms, edit ~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh accordingly (set VECTOR_HAS_TWO_KINOVA_ARMS and VECTOR_HAS_TWO_ROBOTIQ_GRIPPERS to true)
+- For simulation, uncomment `export ROBOT_NETWORK=eth0` and comment out `export ROBOT_NETWORK=br0`
+- For two arms, edit `~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh` accordingly (set `VECTOR_HAS_TWO_KINOVA_ARMS` and `VECTOR_HAS_TWO_ROBOTIQ_GRIPPERS` to `true`)
 - `cd ~/vector_ws/src`
 - `catkin_init_workspace`
 
@@ -60,7 +60,7 @@
 </library>
 `
 
-#HLP-R Manipulation Stack
+#Install HLP-R Manipulation Stack
 - `sudo apt-get install ros-indigo-ecl-geometry`
 - `sudo apt-get install ros-indigo-moveit-full`
 - `cd ~/Software`
@@ -81,20 +81,20 @@
 - `ln -s ~/Software/HLP-R/hlpr_manipulation/ ~/vector_ws/src/ `
 
 
-#HLP-R Simulation stack
+#Install HLP-R Simulation stack
 - `cd ~/Software/HLP-R`
 - `git clone git@github.com:HLP-R/hlpr_simulator.git`
 - `ln -s ~/Software/HLP-R/hlpr_simulator/ ~/vector_ws/src/ `
 
 
-#Navigation
+#Install Navigation Packages
 - `sudo apt-get install ros-indigo-navigation`
 - `sudo apt-get install ros-indigo-slam-gmapping`
-- For simulation, edit ~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh and change line 27 to "export VECTOR_USE_PLATFORM_ODOMETRY=false"
+- For simulation, edit `~/vector_ws/src/vector_v1/vector_common/vector_config/vector_config.sh` and change **line 27** to `export VECTOR_USE_PLATFORM_ODOMETRY=false`
 
 
 #Build and Test
-- Open a new terminal
+- Open a new terminal or source `~/.bashrc`
 - `cd ~/vector_ws`
 - `catkin_make`
 - `source devel/setup.bash`
