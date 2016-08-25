@@ -1,22 +1,24 @@
+*Notice: this is a condensed version of setup instructions. For details, refer to the stanley_vector1 wiki page listed in the reference below.
+
 #Reference:
 - https://github.com/StanleyInnovation/vector_v1/wiki/Setup-Instructions
 
 #Install ROS
-- sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
-- sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA116
-- sudo apt-get update
-- sudo apt-get install ros-indigo-desktop-full
-- sudo rosdep init
-- rosdep update
-- echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
-- source ~/.bashrc
-- sudo apt-get install python-rosinstall
+- `sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'`
+- `sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net --recv-key 0xB01FA116`
+- `sudo apt-get update`
+- `sudo apt-get install ros-indigo-desktop-full`
+- `sudo rosdep init`
+- `rosdep update`
+- `echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc`
+- `source ~/.bashrc`
+- `sudo apt-get install python-rosinstall`
 
 #Install additional packages
-- sudo apt-get install ros-indigo-control-toolbox ros-indigo-moveit-core ros-indigo-costmap-2d ros-indigo-move-base ros-indigo-jsk-recognition ros-indigo-controller-manager ros-indigo-gazebo-ros* ros-indigo-hector* ros-indigo-rviz-imu-plugin ros-indigo-robot-pose-ekf ros-indigo-robot-localization ros-indigo-yocs-cmd-vel-mux ros-indigo-joint-*
+- `sudo apt-get install ros-indigo-control-toolbox ros-indigo-moveit-core ros-indigo-costmap-2d ros-indigo-move-base ros-indigo-jsk-recognition ros-indigo-controller-manager ros-indigo-gazebo-ros* ros-indigo-hector* ros-indigo-rviz-imu-plugin ros-indigo-robot-pose-ekf ros-indigo-robot-localization ros-indigo-yocs-cmd-vel-mux ros-indigo-joint-*`
 
 #Create a Software folder (optional)
-- mkdir ~/Software
+- `mkdir ~/Software`
 
 #Freenect2
 - `cd ~/Software`
