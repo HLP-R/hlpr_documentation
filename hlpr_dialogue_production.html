@@ -1,0 +1,577 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>HLP-R Dialogue Production &#8212; HLP-R Codebase Documentation 0.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hlp-r-dialogue-production">
+<h1>HLP-R Dialogue Production<a class="headerlink" href="#hlp-r-dialogue-production" title="Permalink to this headline">¶</a></h1>
+<p>The dialogue module of hlpr_dialogue_production can be used to integrate a dialogue state machine into your code.  You can also run the standalone server in standalone_server.py and use the DialogueAct action (defined in this package) to send dialogue requests to the robot.</p>
+<div class="section" id="writing-dialogue-and-adding-behaviors">
+<h2>Writing Dialogue and Adding Behaviors<a class="headerlink" href="#writing-dialogue-and-adding-behaviors" title="Permalink to this headline">¶</a></h2>
+<p>The dialogue production code is based on <a class="reference external" href="https://github.com/interaction-lab/cordial-public">CoRDial TTS</a>, from the USC Interaction Lab, which uses Amazon Polly for speech synthesis.  You will need an AWS account in order to use Polly.</p>
+<p>This code parses strings with simple <cite>&lt;&gt;</cite> tags for behaviors that should be synchronized to the speech.  These tags take the form <cite>&lt;behavior_name [arg1 arg2 … argn]&gt;</cite> and will be synchronized to the beginning of the first word that folows the tag.  Although a mechanism for adjusting the timing on a per-behavior basis is provided, this class is not recommended for cases where tight (within 300ms) synchronization is required, since lag in the ROS message system can affect the precise timing.  In practice, this works well for most HRI contexts where behavior timing itself isn’t being studied.  CoRDial TTS also automatically extracts visemes and passes them as behaviors to the dialogue system, although these are not currently handled for HLP-R.</p>
+<dl class="docutils">
+<dt>Each behavior type takes a controller that provides an interface to an action server that executes the behavior.  How the behaviors should be allocated among controllers depends on the interaction context and what clashes you expect to have between degrees of freedom, but the currently-provided controllers are as follows:</dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>Lookat Controller: Moves the robot’s head to look at a point</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Behaviors:</dt>
+<dd><ul class="first last">
+<li>lookat</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Arguments:</dt>
+<dd><ul class="first last">
+<li>If 1 argument: the frame to look at</li>
+<li>If 4 arguments: a frame and position relative to that frame to look at</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Gesture Controller: Moves the robot’s arm through predefined key frames</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Behaviors:</dt>
+<dd><ul class="first last">
+<li>wave</li>
+<li>shrug</li>
+<li>thinking</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Arguments:</dt>
+<dd><ul class="first last">
+<li><em>none</em></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Test Controller: Plays a beep sound</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>Behaviors:</dt>
+<dd><ul class="first last">
+<li>test</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Arguments:</dt>
+<dd><ul class="first last">
+<li><em>none</em></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>You can also provide a “phrase file” to the system, which is a text file where each line is a dialogue act with behaviors in angle brackets, beginning with a unique key in square brackets:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>[ex1] &lt;shrug&gt;This is a phrase file &lt;lookat ee_frame&gt; entry!
+</pre></div>
+</div>
+<p>The phrase file can be used to pre-load audio files using <code class="docutils literal"><span class="pre">gen_phrases.py</span></code>. Run <code class="docutils literal"><span class="pre">gen_phrases.py</span> <span class="pre">--help</span></code> for usage information.</p>
+<div class="section" id="running-the-stand-alone-server">
+<h3>Running the Stand-Alone Server<a class="headerlink" href="#running-the-stand-alone-server" title="Permalink to this headline">¶</a></h3>
+<p>Before you run the server, you will need to have an AWS account and enable your computer to access Polly using Boto3.  Some basic instructions can be found <a class="reference external" href="https://aws.amazon.com/sdk-for-python/">here</a>.</p>
+<ol class="arabic simple">
+<li>Check out the “catkin” branch of <a class="reference external" href="https://github.com/interaction-lab/cordial-public/tree/catkin">CoRDial</a> and place the cordial_tts package in the src folder of your catkin workspace</li>
+<li>Make the messages and services by running <code class="docutils literal"><span class="pre">catkin_make</span></code> in your workspace root directory</li>
+<li>Launch the HLP-R/Poli simulation, with the Lookat waypoints server and MoveIt! enabled</li>
+<li><dl class="first docutils">
+<dt>Launch the controllers and action server::</dt>
+<dd>roslaunch hlpr_dialogue_production all_controllers.launch</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Test the setup::</dt>
+<dd>rosrun hlpr_dialogue_production test_action_client.py</dd>
+</dl>
+</li>
+</ol>
+<p>You should hear speech through your computer speakers and see the robot move.</p>
+</div>
+<div class="section" id="adding-controllers">
+<h3>Adding Controllers<a class="headerlink" href="#adding-controllers" title="Permalink to this headline">¶</a></h3>
+<p>The currently-implemented controllers can be found in <code class="docutils literal"><span class="pre">controllers.py</span></code>.  A ControllerState provides an interface to an ActionServer, providing a callback function that turns the string behavior name and string list of arguments into a goal for that server, and calling the server at the appropriate times relative to the speech audio.  If you would like to implement a controller that you think many folks could use, add it to <code class="docutils literal"><span class="pre">controllers.py</span></code> by adding the following functions, substituting the name of your controller for <code class="docutils literal"><span class="pre">[your]</span></code>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">your</span><span class="p">]</span><span class="n">_controller_cb</span><span class="p">(</span><span class="n">behavior_name</span><span class="p">,</span> <span class="n">string_args</span><span class="p">)</span>
+
+<span class="n">get_</span><span class="p">[</span><span class="n">your</span><span class="p">]</span><span class="n">_controller</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can then add it to the action server by adding it to the list starting on line 71 of <code class="docutils literal"><span class="pre">standalone_server.py</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Make sure that neither the state name (given in all caps by smach convention) nor the callback names clash with any of the existing controllers!!</p>
+</div>
+</div>
+</div>
+<div class="section" id="code-api">
+<h2>Code API<a class="headerlink" href="#code-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="main-smach-wrapper-class">
+<h3>Main Smach Wrapper Class<a class="headerlink" href="#main-smach-wrapper-class" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SmachWrapper</code><span class="sig-paren">(</span><em>use_tts</em>, <em>phrases=None</em>, <em>controllers=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#SmachWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_active_states</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_outcome</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_sm</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_running</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">reset</span></code>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">standalone_start</span></code>()</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="smach-states">
+<h3>Smach States<a class="headerlink" href="#smach-states" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.ControllerState">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">ControllerState</code><span class="sig-paren">(</span><em>name</em>, <em>behaviors</em>, <em>topic</em>, <em>action_type</em>, <em>arg_list_to_goal_cb</em>, <em>behavior_time_adj=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#ControllerState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.ControllerState" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">setup_sync</span></code>(synchronizer)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.SpeechState">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SpeechState</code><span class="sig-paren">(</span><em>use_tts</em>, <em>synchronizer</em>, <em>phrases=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#SpeechState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SpeechState" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.TTSSpeechStart">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">TTSSpeechStart</code><span class="sig-paren">(</span><em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#TTSSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSSpeechStart" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">TTSFallbackSpeechStart</code><span class="sig-paren">(</span><em>phrases</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#TTSFallbackSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.FileSpeechStart">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">FileSpeechStart</code><span class="sig-paren">(</span><em>phrases</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#FileSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.FileSpeechStart" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.NoPrepSpeechStart">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">NoPrepSpeechStart</code><a class="reference internal" href="_modules/hlpr_dialogue_production/dialogue.html#NoPrepSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.NoPrepSpeechStart" title="Permalink to this definition">¶</a></dt>
+<dd><p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">HLP-R Dialogue Production</a><ul>
+<li><a class="reference internal" href="#writing-dialogue-and-adding-behaviors">Writing Dialogue and Adding Behaviors</a><ul>
+<li><a class="reference internal" href="#running-the-stand-alone-server">Running the Stand-Alone Server</a></li>
+<li><a class="reference internal" href="#adding-controllers">Adding Controllers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#code-api">Code API</a><ul>
+<li><a class="reference internal" href="#main-smach-wrapper-class">Main Smach Wrapper Class</a></li>
+<li><a class="reference internal" href="#smach-states">Smach States</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hlpr_dialogue_production.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, HLP-R team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

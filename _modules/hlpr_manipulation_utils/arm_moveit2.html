@@ -1,0 +1,1121 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>hlpr_manipulation_utils.arm_moveit2 &#8212; HLP-R Codebase Documentation 0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hlpr_manipulation_utils.arm_moveit2</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">moveit_commander</span>
+<span class="kn">import</span> <span class="nn">moveit_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">moveit_msgs.srv</span>
+<span class="kn">import</span> <span class="nn">geometry_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">std_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">wpi_jaco_msgs.msg</span>
+<span class="kn">import</span> <span class="nn">wpi_jaco_msgs.srv</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">floor</span><span class="p">,</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">fabs</span>
+
+<div class="viewcode-block" id="ArmMoveIt"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt">[docs]</a><span class="k">class</span> <span class="nc">ArmMoveIt</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; MoveIt! wrapper for planning for the HLP-R robot&#39;s arm(s).</span>
+
+<span class="sd">    This class provides a simplified interface to the planning capabilities of</span>
+<span class="sd">    the MoveIt! ROS packages.  To plan to a specific joint configuration::</span>
+<span class="sd">    </span>
+<span class="sd">        a = ArmMoveit()</span>
+<span class="sd">        pose = [pi,pi,pi,pi]</span>
+<span class="sd">    </span>
+<span class="sd">        a.goto_pose(pose,is_joint_pos=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">planning_frame</span><span class="o">=</span><span class="s1">&#39;base_link&#39;</span><span class="p">,</span> <span class="n">default_planner</span><span class="o">=</span><span class="s2">&quot;RRTConnectkConfigDefault&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create an interface to ROS MoveIt with a given frame and planner.</span>
+
+<span class="sd">        Creates an interface to ROS MoveIt!. Right now this only creates</span>
+<span class="sd">        a planner for a single arm. The default values of the arguments</span>
+<span class="sd">        should work well for most applications; look into the MoveIt! </span>
+<span class="sd">        documentation if you think you&#39;d like to change them.</span>
+
+<span class="sd">        **IMPORTANT:** this class maps all commands to the continuous joints</span>
+<span class="sd">        into (-pi,pi).  For some applications this may result in unexpected</span>
+<span class="sd">        or undesirable behavior!</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        planning_frame : str, optional</span>
+<span class="sd">            the frame in which MoveIt! should plan</span>
+<span class="sd">        default_planner : str, optional</span>
+<span class="sd">            which planner to use with MoveIt!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make sure the moveit service is up and running</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Waiting for MoveIt! to load&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;compute_ik&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ROSException</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;No moveit service detected. Exiting&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;MoveIt detected: arm planner loading&quot;</span><span class="p">)</span>
+
+        <span class="c1"># self.pose = geometry_msgs.msg.PoseStamped()</span>
+
+        <span class="c1">## Interface to the robot as a whole.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">RobotCommander</span><span class="p">()</span>
+        
+        <span class="c1">## Interface to the world surrounding the robot.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span> <span class="o">=</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">PlanningSceneInterface</span><span class="p">()</span>
+
+        <span class="c1">## Array of interfaces to single groups of joints.  </span>
+        <span class="c1">## At the moment, only a single arm interface is instantiated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="p">[</span><span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveGroupCommander</span><span class="p">(</span><span class="s2">&quot;arm&quot;</span><span class="p">)]</span>
+
+        <span class="c1">## The name of the planner to use</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">planner</span> <span class="o">=</span> <span class="n">default_planner</span>
+
+        <span class="c1"># Set the planning pose reference frame</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_pose_reference_frame</span><span class="p">(</span><span class="n">planning_frame</span><span class="p">)</span>
+
+        <span class="c1">## The names of continuous joints. They will always be remapped</span>
+        <span class="c1">## into (-pi,pi)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">continuous_joints</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;shoulder_pan_joint&#39;</span><span class="p">,</span><span class="s1">&#39;wrist_1_joint&#39;</span><span class="p">,</span><span class="s1">&#39;wrist_2_joint&#39;</span><span class="p">,</span><span class="s1">&#39;wrist_3_joint&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ArmMoveIt.get_IK"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_IK">[docs]</a>    <span class="k">def</span> <span class="nf">get_IK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_pose</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Find the corresponding joint angles for an end effector pose</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to compute the inverse kinematics for a given end</span>
+<span class="sd">        effector pose.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        new_pose : geometry_msgs/Pose</span>
+<span class="sd">            the end effector pose</span>
+<span class="sd">        root : string, optional</span>
+<span class="sd">            the root link (if none is provided, uses the planning frame)</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list </span>
+<span class="sd">            The joint angles corresponding to the end effector pose</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">## from a defined newPose (geometry_msgs.msg.Pose()), retunr its correspondent joint angle(list)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;compute_ik&#39;</span><span class="p">)</span>
+        <span class="n">compute_ik</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;compute_ik&#39;</span><span class="p">,</span> <span class="n">moveit_msgs</span><span class="o">.</span><span class="n">srv</span><span class="o">.</span><span class="n">GetPositionIK</span><span class="p">)</span>
+
+        <span class="n">wkPose</span> <span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PoseStamped</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">wkPose</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_planning_frame</span><span class="p">()</span> <span class="c1"># name:odom</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">wkPose</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="n">root</span>
+        
+        <span class="n">wkPose</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">stamp</span><span class="o">=</span><span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">wkPose</span><span class="o">.</span><span class="n">pose</span><span class="o">=</span><span class="n">new_pose</span>
+
+        <span class="n">msgs_request</span> <span class="o">=</span> <span class="n">moveit_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PositionIKRequest</span><span class="p">()</span>
+        <span class="n">msgs_request</span><span class="o">.</span><span class="n">group_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_name</span><span class="p">()</span> <span class="c1"># name: arm</span>
+        <span class="c1"># msgs_request.robot_state = robot.get_current_state()</span>
+        <span class="n">msgs_request</span><span class="o">.</span><span class="n">pose_stamped</span> <span class="o">=</span> <span class="n">wkPose</span>
+        <span class="n">msgs_request</span><span class="o">.</span><span class="n">timeout</span><span class="o">.</span><span class="n">secs</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">msgs_request</span><span class="o">.</span><span class="n">avoid_collisions</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">jointAngle</span><span class="o">=</span><span class="n">compute_ik</span><span class="p">(</span><span class="n">msgs_request</span><span class="p">)</span>
+            <span class="n">ans</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">jointAngle</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">jointAngle</span><span class="o">.</span><span class="n">error_code</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="o">-</span><span class="mi">31</span><span class="p">:</span>
+                <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">&#39;No IK solution&#39;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="n">ans</span>
+        <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Service call failed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.get_FK"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK">[docs]</a>    <span class="k">def</span> <span class="nf">get_FK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span> <span class="o">=</span> <span class="s1">&#39;base_link&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Find the end effector pose for the current joint configuration</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to compute the forward kinematics for a given joint</span>
+<span class="sd">        configuration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        root : string, optional</span>
+<span class="sd">            the root link (if none is provided, uses the planning frame)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry_msgs/PoseStamped</span>
+<span class="sd">            the pose of the end effector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;compute_fk&#39;</span><span class="p">)</span>
+        <span class="n">compute_fk</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;compute_fk&#39;</span><span class="p">,</span> <span class="n">moveit_msgs</span><span class="o">.</span><span class="n">srv</span><span class="o">.</span><span class="n">GetPositionFK</span><span class="p">)</span>
+
+        <span class="n">header</span> <span class="o">=</span> <span class="n">std_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Header</span><span class="p">()</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">stamp</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">fk_link_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;right_ee_link&#39;</span><span class="p">]</span>
+        <span class="n">robot_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot</span><span class="o">.</span><span class="n">get_current_state</span><span class="p">()</span>    
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">reply</span><span class="o">=</span><span class="n">compute_fk</span><span class="p">(</span><span class="n">header</span><span class="p">,</span><span class="n">fk_link_names</span><span class="p">,</span><span class="n">robot_state</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">reply</span><span class="o">.</span><span class="n">pose_stamped</span>
+
+        <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Service call failed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.get_FK_wpi"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK_wpi">[docs]</a>    <span class="k">def</span> <span class="nf">get_FK_wpi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joints</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Find the end effector pose for a given joint configuration</span>
+<span class="sd">        </span>
+<span class="sd">        Uses the WPI Jaco wrapper to compute the forward kinematics for a </span>
+<span class="sd">        given joint configuration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        joints : list, optional</span>
+<span class="sd">            the joint positions for which to find the end effector position.</span>
+<span class="sd">            If not provided, gives FK for all joints set to value of pi.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        geometry_msgs/PoseStamped</span>
+<span class="sd">            the pose of the end effector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">wait_for_service</span><span class="p">(</span><span class="s1">&#39;/jaco_arm/kinematics/fk&#39;</span><span class="p">)</span>
+        <span class="n">compute_fk</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceProxy</span><span class="p">(</span><span class="s1">&#39;/jaco_arm/kinematics/fk&#39;</span><span class="p">,</span> <span class="n">wpi_jaco_msgs</span><span class="o">.</span><span class="n">srv</span><span class="o">.</span><span class="n">JacoFK</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">joints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">joints</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">pose</span><span class="o">=</span><span class="n">compute_fk</span><span class="p">(</span><span class="n">joints</span><span class="p">)</span>      
+            <span class="k">return</span> <span class="n">pose</span>
+        <span class="k">except</span> <span class="n">rospy</span><span class="o">.</span><span class="n">ServiceException</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Service call failed: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_joint_pos"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos">[docs]</a>    <span class="k">def</span> <span class="nf">plan_joint_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Plan a trajectory to reach a given joint configuration</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to plan a trajectory to reach a given joint</span>
+<span class="sd">        configuration</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : list or dict</span>
+<span class="sd">            if a list, a list of positions for all active joints </span>
+<span class="sd">            in the group; if a dictionary, a mapping of joint names </span>
+<span class="sd">            to positions for the joints that should be moved (all other </span>
+<span class="sd">            joints will be held at their current angles).</span>
+<span class="sd">        starting_config : RobotState, optional</span>
+<span class="sd">            the starting configuration to plan from.  If not set, will </span>
+<span class="sd">            be set to the current state of the robot.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="n">starting_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_joint_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">group_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_plan</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_ee_pos"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_pos">[docs]</a>    <span class="k">def</span> <span class="nf">plan_ee_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Plan a trajectory to reach a given end effector position</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to plan a trajectory to reach a given end effector</span>
+<span class="sd">        position</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : geometry_msgs/Pose</span>
+<span class="sd">            the desired pose of the end effector</span>
+<span class="sd">        starting_config : RobotState, optional</span>
+<span class="sd">            the starting configuration to plan from.  If not set, will </span>
+<span class="sd">            be set to the current state of the robot.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="n">starting_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_ee_target</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">group_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_plan</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.set_start_state"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_start_state">[docs]</a>    <span class="k">def</span> <span class="nf">set_start_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joint_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the starting state from which to plan</span>
+<span class="sd">        </span>
+<span class="sd">        Sets the MoveIt! starting position in preparation for planning</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        joint_config (RobotState) -- the starting configuration to plan</span>
+<span class="sd">            from.  If not set, will be set to the current state of the robot.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">joint_config</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">start_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_from_joints</span><span class="p">(</span><span class="n">joint_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_state</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">set_start_state</span><span class="p">(</span><span class="n">start_state</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">&#39;Unable to set start state: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="ArmMoveIt.set_joint_target"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_joint_target">[docs]</a>    <span class="k">def</span> <span class="nf">set_joint_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the joint configuration target</span>
+<span class="sd">        </span>
+<span class="sd">        Sets the MoveIt! target position in preparation for planning</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target (list or dict) -- if a list, a list of positions for</span>
+<span class="sd">            all active joints in the group; if a dictionary, a mapping</span>
+<span class="sd">            of joint names to positions for the joints that should be</span>
+<span class="sd">            moved (all other joints will be held at their current angles).</span>
+<span class="sd">        group_id (int) -- the index of the group for which to calculate</span>
+<span class="sd">            the IK.  Used for compatibility with future functionality; </span>
+<span class="sd">            leave set to default for now.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">set_joint_value_target</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simplify_joints</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">group_id</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">set_planner_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">planner</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">&#39;Unable to set target and planner: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.set_ee_target"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_ee_target">[docs]</a>    <span class="k">def</span> <span class="nf">set_ee_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Set the end effector position target</span>
+<span class="sd">        </span>
+<span class="sd">        Sets the MoveIt! target position in preparation for planning</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : geometry_msgs/Pose</span>
+<span class="sd">            the desired pose of the end effector</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">set_pose_target</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">set_planner_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">planner</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">&#39;Unable to set target and planner: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.get_plan"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_plan">[docs]</a>    <span class="k">def</span> <span class="nf">get_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Generates a plan for reaching the current goal</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to generate a plan based on the previously-set starting</span>
+<span class="sd">        position and target position.</span>
+
+<span class="sd">        .. note:: You must set the target and starting position before calling</span>
+<span class="sd">            this function.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">plan</span> <span class="o">=</span>  <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">plan</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s1">&#39;No plan found: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">plan</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.move_robot"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_robot">[docs]</a>    <span class="k">def</span> <span class="nf">move_robot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Moves the robot according to a plan</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to move the arm according to the provided plan.</span>
+
+<span class="sd">        .. warning:: The plans can be stitched together, but this can </span>
+<span class="sd">            have unexpected issues since the plan boundaries can violate </span>
+<span class="sd">            acceleration limits.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        plan : RobotTrajectory</span>
+<span class="sd">            a plan generated by MoveIt!</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArmMoveIt.plan_joint_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">plan_joint_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Generates a multi-segment plan to reach waypoints in joint space</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to generate a plan from target to target. One plan is</span>
+<span class="sd">        generated for each segment.</span>
+
+<span class="sd">        .. warning:: The plans can be stitched together, but this can </span>
+<span class="sd">            have unexpected issues since the plan boundaries can violate </span>
+<span class="sd">            acceleration limits.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of joint targets (either list or dict; see documentation </span>
+<span class="sd">            for :py:meth:`plan_joint_pos` )</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+<span class="sd">        starting_config : RobotState</span>
+<span class="sd">            the starting state. If not provided this will default to the </span>
+<span class="sd">            current state of the robot.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list of RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">all_plans</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current_config</span> <span class="o">=</span> <span class="n">starting_config</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="n">plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_joint_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">current_config</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">plan</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+                <span class="n">all_plans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">current_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_from_trajectory</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">joint_trajectory</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t set configuration. Error:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">all_plans</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_ee_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">plan_ee_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Generates a multi-segment plan to reach end effector waypoints</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to generate a plan from target to target. One plan is</span>
+<span class="sd">        generated for each segment.</span>
+
+<span class="sd">        .. warning:: The plans can be stitched together, but this can have </span>
+<span class="sd">            unexpected issues since the plan boundaries can violate </span>
+<span class="sd">            acceleration limits.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of geometry_msgs/Pose for the end effector</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+<span class="sd">        starting_config : RobotState</span>
+<span class="sd">            the starting state. If not provided this will default to the </span>
+<span class="sd">            current state of the robot.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list of RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">all_plans</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current_config</span> <span class="o">=</span> <span class="n">starting_config</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">:</span>
+            <span class="n">plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_ee_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">current_config</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">plan</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+                <span class="n">all_plans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">current_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_from_trajectory</span><span class="p">(</span><span class="n">plan</span><span class="o">.</span><span class="n">joint_trajectory</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">moveit_commander</span><span class="o">.</span><span class="n">MoveItCommanderException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t set configuration. Error:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">all_plans</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.move_through_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">move_through_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot through the specified end effector </span>
+<span class="sd">        or joint pose waypoints, then moves the robot. Returns True on success,</span>
+<span class="sd">        otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of either joint positions or end effector positions. </span>
+<span class="sd">            See the documentation for plan_joint_waypoints and</span>
+<span class="sd">            plan_ee_waypoints.</span>
+<span class="sd">        is_joint_pos : bool, optional</span>
+<span class="sd">            True if the targets are given in joint space (defaults to False)</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">plans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="p">,</span> 
+                                   <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plans</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">plans</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">success</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">plans</span><span class="p">:</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="n">success</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_robot</span><span class="p">(</span><span class="n">plan</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">success</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.move_through_joint_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_joint_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">move_through_joint_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot through the specified end effector </span>
+<span class="sd">        or joint pose waypoints, then moves the robot. Returns True on success,</span>
+<span class="sd">        otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of joint positions (either list or dict)</span>
+<span class="sd">            See the documentation for plan_joint_waypoints.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_through_waypoints</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                    <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArmMoveIt.move_to_joint_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_joint_pose">[docs]</a>    <span class="k">def</span> <span class="nf">move_to_joint_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot to the specified joint pose, </span>
+<span class="sd">        then moves the robot. Returns True on success, otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : list or dict</span>
+<span class="sd">            a joint position (list or dict). See the documentation for </span>
+<span class="sd">            plan_joint_waypoints.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_to_pose</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                 <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.move_to_ee_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_ee_pose">[docs]</a>    <span class="k">def</span> <span class="nf">move_to_ee_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot to the specified joint pose, </span>
+<span class="sd">        then moves the robot. Returns True on success, otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : geometry_msgs/Pose</span>
+<span class="sd">            an end effector position. See the documentation for </span>
+<span class="sd">            plan_ee_waypoints.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_to_pose</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                 <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="ArmMoveIt.move_through_ee_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_ee_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">move_through_ee_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot through the specified end effector </span>
+<span class="sd">        or joint pose waypoints, then moves the robot. Returns True on success,</span>
+<span class="sd">        otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of end effector positions (geometry_msgs/Pose)</span>
+<span class="sd">            See the documentation for plan_ee_waypoints.</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_through_waypoints</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                    <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>    </div>
+
+<div class="viewcode-block" id="ArmMoveIt.move_to_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_pose">[docs]</a>    <span class="k">def</span> <span class="nf">move_to_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Uses MoveIt! to generate a plan then move the robot.</span>
+
+<span class="sd">        Generates a plan to move the robot to the specified end effector </span>
+<span class="sd">        or joint pose, then moves the robot. Returns True on success,</span>
+<span class="sd">        otherwise returns False.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : list, dict, or geometry_msgs/Pose</span>
+<span class="sd">            either a joint position (list or dict) or end effector position. </span>
+<span class="sd">            See the documentation for plan_joint_waypoints and</span>
+<span class="sd">            plan_ee_waypoints.</span>
+<span class="sd">        is_joint_pos : bool, optional</span>
+<span class="sd">            True if the targets are given in joint space (defaults to False)</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bool</span>
+<span class="sd">            True on success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">plan</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_pose</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">plan</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">move_robot</span><span class="p">(</span><span class="n">plan</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+    
+<div class="viewcode-block" id="ArmMoveIt.plan_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_pose">[docs]</a>    <span class="k">def</span> <span class="nf">plan_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Plan a trajectory to reach a given end effector or joint pose</span>
+
+<span class="sd">        Uses MoveIt! to plan a trajectory to reach a given end effector</span>
+<span class="sd">        position or joint configuration.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : list, dict, or geometry_msgs/Pose</span>
+<span class="sd">            either a joint position (list or dict) or end effector position. </span>
+<span class="sd">            See the documentation for plan_joint_waypoints and</span>
+<span class="sd">            plan_ee_waypoints.</span>
+<span class="sd">        is_joint_pos : bool, optional</span>
+<span class="sd">            True if the targets are given in joint space (defaults to False)</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">is_joint_pos</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_joint_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">starting_config</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_ee_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">starting_config</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_waypoints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_waypoints">[docs]</a>    <span class="k">def</span> <span class="nf">plan_waypoints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                       <span class="n">merge_plans</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">starting_config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Generates a multi-segment plan to reach waypoints in target space</span>
+<span class="sd">        </span>
+<span class="sd">        Uses MoveIt! to generate a plan from target to target. One plan is</span>
+<span class="sd">        generated for each segment.</span>
+
+<span class="sd">        .. warning:: The plans can be stitched together, but this can have </span>
+<span class="sd">            unexpected issues since the plan boundaries can violate </span>
+<span class="sd">            acceleration limits.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        targets : list</span>
+<span class="sd">            a list of either joint positions or end effector positions. </span>
+<span class="sd">            See the documentation for plan_joint_waypoints and</span>
+<span class="sd">            plan_ee_waypoints.</span>
+<span class="sd">        is_joint_pos : bool, optional</span>
+<span class="sd">            True if the targets are given in joint space (defaults to False)</span>
+<span class="sd">        merge_plans : bool</span>
+<span class="sd">            if True, return a single merged plan (see note above about </span>
+<span class="sd">            potential issues)</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+<span class="sd">        starting_config : RobotState</span>
+<span class="sd">            the starting state. If not provided this will default to the </span>
+<span class="sd">            current state of the robot.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list of RobotTrajectory</span>
+<span class="sd">            the plan for reaching the target position</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">is_joint_pos</span><span class="p">:</span>
+            <span class="n">plans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_joint_waypoints</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">starting_config</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_ee_waypoints</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">gorup_id</span><span class="p">,</span> <span class="n">starting_config</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">merge_plans</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_merge_plans</span><span class="p">(</span><span class="n">plans</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">plans</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.get_current_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_current_pose">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the current pose of the planning group</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        list</span>
+<span class="sd">            the joint positions, mapped into (-pi,pi)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simplify_joints</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_current_joint_values</span><span class="p">(),</span> <span class="n">group_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ArmMoveIt.state_from_joints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_joints">[docs]</a>    <span class="k">def</span> <span class="nf">state_from_joints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joints</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Returns a RobotState object with given joint positions</span>
+
+<span class="sd">        Returns a RobotState object with the given joints</span>
+<span class="sd">        set to the given positions.  The joints may be given</span>
+<span class="sd">        as a dict or list object.  All other joints are taken from</span>
+<span class="sd">        the current state.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        target : list or dict</span>
+<span class="sd">            if a list, a list of positions for all active joints in </span>
+<span class="sd">            the group; if a dictionary, a mapping of joint names to </span>
+<span class="sd">            positions for the joints that should be moved (all other </span>
+<span class="sd">            joints will be held at their current angles).</span>
+<span class="sd">        group_id : int, optional</span>
+<span class="sd">            the index of the group for which to calculate the IK.  Used </span>
+<span class="sd">            for compatibility with future functionality; leave set to </span>
+<span class="sd">            default for now.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotState</span>
+<span class="sd">            A RobotState object with only the given joints changed</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_state</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">joints</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">joint_names</span> <span class="o">=</span> <span class="n">joints</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            <span class="n">joint_idxs</span> <span class="o">=</span> <span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">joint_names</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">joint_idxs</span><span class="p">)):</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">position</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">joints</span><span class="p">[</span><span class="n">joint_names</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">joints</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">joints</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Joints must be provided as a list or dictionary&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Joints must be provided as a list or dictionary&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.state_from_trajectory"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_trajectory">[docs]</a>    <span class="k">def</span> <span class="nf">state_from_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trajectory</span><span class="p">,</span> <span class="n">point_idx</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Returns a RobotState object with joint positions from trajectory</span>
+
+<span class="sd">        Returns a RobotState object with joint positions taken from the </span>
+<span class="sd">        given trajectory. By default, sets the position to the last point</span>
+<span class="sd">        in the trajectory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        trajectory : JointTrajectory</span>
+<span class="sd">            the trajectory from which to take the joint positions.</span>
+<span class="sd">        point_idx : int</span>
+<span class="sd">            which point in the trajectory to take the state from. Defaults </span>
+<span class="sd">            to -1, taking the last point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        RobotState </span>
+<span class="sd">            A RobotState object with state corresponding to the</span>
+<span class="sd">            given point in the trajectory.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_state</span><span class="p">()</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="n">point_idx</span><span class="p">]</span>
+        <span class="n">joints</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">position</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trajectory</span><span class="o">.</span><span class="n">joint_names</span><span class="p">)):</span>
+            <span class="n">joint_name</span> <span class="o">=</span> <span class="n">trajectory</span><span class="o">.</span><span class="n">joint_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">joint_name</span><span class="p">)</span>
+            <span class="n">joints</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">=</span><span class="n">target</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">joint_state</span><span class="o">.</span><span class="n">position</span><span class="o">=</span><span class="n">joints</span>
+        <span class="k">return</span> <span class="n">state</span></div>
+
+    <span class="k">def</span> <span class="nf">_simplify_angle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">):</span>
+        <span class="c1"># Very simple function that makes sure the angles are between -pi and pi</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">pi</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">pi</span><span class="p">:</span>
+                <span class="n">angle</span> <span class="o">-=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span>
+        <span class="k">elif</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">pi</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">angle</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">pi</span><span class="p">:</span>
+                <span class="n">angle</span> <span class="o">+=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span>
+
+        <span class="k">return</span> <span class="n">angle</span>
+
+    <span class="k">def</span> <span class="nf">_simplify_joints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joints</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="c1"># Helper function to convert a dictionary of joint values</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">joints</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">simplified_joints</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">joint</span> <span class="ow">in</span> <span class="n">joints</span><span class="p">:</span>
+                <span class="c1"># Pull out the name of the joint</span>
+                <span class="n">joint_name</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">::])</span>
+                <span class="k">if</span> <span class="n">joint_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_joints</span><span class="p">:</span>
+                    <span class="n">simplified_joints</span><span class="p">[</span><span class="n">joint</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_simplify_angle</span><span class="p">(</span><span class="n">joints</span><span class="p">[</span><span class="n">joint</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">simplified_joints</span><span class="p">[</span><span class="n">joint</span><span class="p">]</span> <span class="o">=</span> <span class="n">joints</span><span class="p">[</span><span class="n">joint</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">joints</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">simplified_joints</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="c1">#separate the joint name from the group name</span>
+            <span class="n">joint_order</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">::]),</span> 
+                              <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_active_joints</span><span class="p">())</span>
+            
+            <span class="n">continuous_joint_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">joint_order</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_joints</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">xrange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">joints</span><span class="p">)):</span>
+                <span class="n">a</span> <span class="o">=</span> <span class="n">joints</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">continuous_joint_indices</span><span class="p">:</span>
+                    <span class="n">simplified_joints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_simplify_angle</span><span class="p">(</span><span class="n">a</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">simplified_joints</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Joints must be provided as a list or dictionary&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Joints must be provided as a list or dictionary&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">simplified_joints</span>
+
+    <span class="k">def</span> <span class="nf">_copy_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Copies the robot state (so it can be modified to plan from</span>
+<span class="sd">            non-current joint configurations).&#39;&#39;&#39;</span>
+        <span class="c1">## output: a copy of the robot&#39;s current state</span>
+        <span class="k">return</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot</span><span class="o">.</span><span class="n">get_current_state</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_merge_plans</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plan_list</span><span class="p">,</span> <span class="n">time_between</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="c1">#check if the list is empty</span>
+        <span class="k">if</span> <span class="n">plan_list</span><span class="o">==</span><span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">plan_list</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Cannot merge plans: no plans provided&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">plan_list</span>
+        
+        <span class="n">all_points</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">plan</span> <span class="ow">in</span> <span class="n">plan_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">plan</span><span class="o">.</span><span class="n">joint_trajectory</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+                <span class="n">new_point</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+                <span class="n">new_point</span><span class="o">.</span><span class="n">time_from_start</span> <span class="o">=</span> <span class="n">new_point</span><span class="o">.</span><span class="n">time_from_start</span><span class="o">+</span><span class="n">start_time</span>
+                <span class="n">all_points</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_point</span><span class="p">)</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">all_points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time_from_start</span><span class="o">+</span><span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="n">time_between</span><span class="p">)</span>
+                
+        <span class="n">full_plan</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">plan_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">full_plan</span><span class="o">.</span><span class="n">joint_trajectory</span><span class="o">.</span><span class="n">points</span><span class="o">=</span><span class="n">all_points</span>
+        <span class="k">return</span> <span class="n">full_plan</span>
+
+
+    <span class="sd">&#39;&#39;&#39; Deprecated function definitions maintained for backwards compatibility &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_targetInput"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInput">[docs]</a>    <span class="k">def</span> <span class="nf">plan_targetInput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">joint_flag</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Generic target planner that what type is specified&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">joint_flag</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plan_joint_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plan_ee_pos</span><span class="p">(</span><span class="n">target</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_targetInputWaypoint"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInputWaypoint">[docs]</a>    <span class="k">def</span> <span class="nf">plan_targetInputWaypoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">joint_flag</span><span class="p">,</span> <span class="n">merged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                 <span class="n">current_joints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_waypoints</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">joint_flag</span><span class="p">,</span> 
+                                   <span class="n">merged</span><span class="p">,</span> <span class="n">current_joints</span><span class="p">,</span> <span class="n">group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.set_robot_state_pose"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_pose">[docs]</a>    <span class="k">def</span> <span class="nf">set_robot_state_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_from_trajectory</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span> <span class="n">point_idx</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.set_robot_state_joint_dict"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_joint_dict">[docs]</a>    <span class="k">def</span> <span class="nf">set_robot_state_joint_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">joint_dict</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_from_joints</span><span class="p">(</span><span class="n">joint_dict</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="ArmMoveIt.get_active_joints"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_active_joints">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_joints</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_active_joints</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.merge_points"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.merge_points">[docs]</a>    <span class="k">def</span> <span class="nf">merge_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">new_points</span><span class="p">,</span> <span class="n">time_between</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="c1"># Check if this is the first set</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">new_points</span>
+
+        <span class="n">all_points</span> <span class="o">=</span> <span class="n">points</span>
+        <span class="c1"># Pull out the last time from current points</span>
+        <span class="n">last_point_time</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">time_from_start</span><span class="o">+</span><span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="n">time_between</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">new_points</span><span class="p">:</span>
+            <span class="n">point</span><span class="o">.</span><span class="n">time_from_start</span> <span class="o">=</span> <span class="n">point</span><span class="o">.</span><span class="n">time_from_start</span><span class="o">+</span><span class="n">last_point_time</span>
+            <span class="n">all_points</span> <span class="o">=</span> <span class="n">all_points</span> <span class="o">+</span> <span class="p">[</span><span class="n">point</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">all_points</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_jointTargetInput"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_jointTargetInput">[docs]</a>    <span class="k">def</span> <span class="nf">plan_jointTargetInput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">target_joint</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="c1">## input: target joint angles (list) of the robot</span>
+        <span class="c1">## output: plan from current joint angles to the target one</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_joint_pos</span><span class="p">(</span><span class="n">target_joint</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.plan_poseTargetInput"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_poseTargetInput">[docs]</a>    <span class="k">def</span> <span class="nf">plan_poseTargetInput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">target_pose</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="c1">## input: tart pose (geometry_msgs.msg.Pose())</span>
+        <span class="c1">## output: plan from current  pose to the target one</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plan_ee_pos</span><span class="p">(</span><span class="n">target_pose</span><span class="p">,</span><span class="n">group_id</span><span class="o">=</span><span class="n">group_id</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="ArmMoveIt.box_table_scene"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.box_table_scene">[docs]</a>    <span class="k">def</span> <span class="nf">box_table_scene</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="c1">#Scene : add box </span>
+        <span class="c1"># after loading this object/scene, need to do &quot;add&quot; ==&gt; &quot;planning scene&quot;  </span>
+        <span class="c1"># in the rviz interface if one want to see the box</span>
+        
+        <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">remove_world_object</span><span class="p">(</span><span class="s2">&quot;table_box&quot;</span><span class="p">)</span>
+        
+        <span class="n">p</span> <span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">PoseStamped</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot</span><span class="o">.</span><span class="n">get_planning_frame</span><span class="p">()</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mf">1.64</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="mf">0.25</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scene</span><span class="o">.</span><span class="n">add_box</span><span class="p">(</span><span class="s2">&quot;table_box&quot;</span><span class="p">,</span><span class="n">p</span><span class="p">,(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+     
+        <span class="n">rospy</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ArmMoveIt.wayPointIK"><a class="viewcode-back" href="../../hlpr_manipulation_utils.html#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.wayPointIK">[docs]</a>    <span class="k">def</span> <span class="nf">wayPointIK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wps</span><span class="p">,</span> <span class="n">numSteps</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ik_root</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;***DEPRECATED*** Left in for backwards compatibility&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">numSteps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">numSteps</span> <span class="o">=</span> <span class="mi">3</span>
+            <span class="n">jointWps</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">wps</span><span class="p">)):</span>
+            <span class="n">jointP</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_IK</span><span class="p">(</span><span class="n">wps</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ik_root</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">jointP</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">jointWps</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">break</span>
+            <span class="n">jointWps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">jointP</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jointWps</span></div></div>
+
+<span class="k">def</span> <span class="nf">ask_scene_integration</span><span class="p">(</span><span class="n">arm</span><span class="p">):</span>
+    <span class="c1"># Ask the user if want to integrate a box scene</span>
+    <span class="n">answer</span><span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s2"> Integrate a box as a table from code ? (1 or 0)  </span>
+<span class="s2">  (if 1: box can&#39;t be displaced nor resized by user, if 0: no scene (can always do add from rviz interface) ) </span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">answer</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">arm</span><span class="o">.</span><span class="n">box_table_scene</span><span class="p">()</span>
+        <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Box inserted; to see it ==&gt; rviz interface ==&gt; add button==&gt; planning scene  &quot;</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> No scene added&quot;</span>
+        <span class="k">return</span>  
+      
+<span class="k">def</span> <span class="nf">ask_position</span><span class="p">(</span><span class="n">arm</span><span class="p">,</span><span class="n">tarPose</span><span class="p">):</span>
+    <span class="c1">#Ask the user the values of the target position</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>   
+            <span class="n">inputPosition</span><span class="o">=</span><span class="nb">input</span><span class="p">(</span><span class="s2">&quot;&quot;&quot; </span><span class="se">\n</span><span class="s2"> Target position coord. (format: x,y,z or write -1 to take the robot current position ): &quot;&quot;&quot;</span><span class="p">)</span>      
+            
+            <span class="k">if</span> <span class="n">inputPosition</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">inputPosition</span><span class="o">=</span><span class="n">tarPose</span><span class="o">.</span><span class="n">position</span>  
+                <span class="k">return</span> <span class="n">inputPosition</span>
+          
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span><span class="ne">IOError</span><span class="p">,</span><span class="ne">NameError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Please, enter the coordinate in the following format: x,y,z &quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>          
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">inputPosition</span><span class="p">))</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">poseTmp</span><span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">()</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">x</span><span class="o">=</span><span class="n">inputPosition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">y</span><span class="o">=</span><span class="n">inputPosition</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">z</span><span class="o">=</span><span class="n">inputPosition</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">poseTmp</span><span class="o">.</span><span class="n">position</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Please, enter the coordinate in the following format: x,y,z &quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+            
+        
+<span class="k">def</span> <span class="nf">ask_orientation</span><span class="p">(</span><span class="n">arm</span><span class="p">,</span><span class="n">tarPose</span><span class="p">):</span>
+    <span class="c1"># Ask the user the values of the target quaternion</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>   
+            <span class="n">inputQuat</span><span class="o">=</span><span class="nb">input</span><span class="p">(</span><span class="s2">&quot;&quot;&quot; </span><span class="se">\n</span><span class="s2"> Target quaternion coordi. (format: qx,qy,qz,qw or write -1 to take the robot current quaternion ):&quot;&quot;&quot;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">inputQuat</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">inputQuat</span><span class="o">=</span><span class="n">arm</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_current_pose</span><span class="p">()</span><span class="o">.</span><span class="n">pose</span><span class="o">.</span><span class="n">orientation</span>                   
+            <span class="k">return</span>  <span class="n">inputQuat</span>
+          
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span><span class="ne">IOError</span><span class="p">,</span><span class="ne">NameError</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Please, enter the coordinate in the following format: qx,qy,qz,qw &quot;</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">inputQuat</span><span class="p">))</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">poseTmp</span><span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">()</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">x</span><span class="o">=</span><span class="n">inputQuat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">y</span><span class="o">=</span><span class="n">inputQuat</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">z</span><span class="o">=</span><span class="n">inputQuat</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">poseTmp</span><span class="o">.</span><span class="n">orientation</span><span class="o">.</span><span class="n">w</span><span class="o">=</span><span class="n">inputQuat</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">poseTmp</span><span class="o">.</span><span class="n">orientation</span>    
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Please, enter the coordinate in the following format: qx,qy,qz,qw &quot;</span><span class="p">)</span>
+            
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">arm</span> <span class="o">=</span> <span class="n">ArmMoveIt</span><span class="p">()</span>
+
+    <span class="n">tarPose</span> <span class="o">=</span> <span class="n">geometry_msgs</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">Pose</span><span class="p">()</span>
+
+    <span class="c1">## ask if integrate object scene from code or not</span>
+    <span class="n">ask_scene_integration</span><span class="p">(</span><span class="n">arm</span><span class="p">)</span>
+    
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">rospy</span><span class="o">.</span><span class="n">is_shutdown</span><span class="p">():</span>
+      
+        <span class="c1">##   Assigned tarPose the current Pose of the robot </span>
+        <span class="n">tarPose</span> <span class="o">=</span> <span class="n">arm</span><span class="o">.</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_current_pose</span><span class="p">()</span><span class="o">.</span><span class="n">pose</span>
+      
+
+        <span class="c1">## ask input from user (COMMENT IF NOT USE AND WANT TO ASSIGN MANUAL VALUE IN CODE)    </span>
+        <span class="n">tarPose</span><span class="o">.</span><span class="n">position</span> <span class="o">=</span> <span class="n">ask_position</span><span class="p">(</span><span class="n">arm</span><span class="p">,</span><span class="n">tarPose</span><span class="p">)</span>   
+        <span class="n">tarPose</span><span class="o">.</span><span class="n">orientation</span> <span class="o">=</span> <span class="n">ask_orientation</span><span class="p">(</span><span class="n">arm</span><span class="p">,</span><span class="n">tarPose</span><span class="p">)</span>  
+
+        <span class="c1">##  Example of Assigned values for new targetPose to robot</span>
+        <span class="c1">#    tarPose.position.x = 0.89</span>
+        <span class="c1">#    tarPose.position.y = 0.00</span>
+        <span class="c1">#    tarPose.position.z = 0.32   </span>
+        <span class="c1">#    tarPose.orientation.x = 0.0     </span>
+   
+        <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> The target coordinate is: </span><span class="si">%s</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">tarPose</span>     
+    
+        <span class="c1">## IK for target position  </span>
+        <span class="n">jointTarg</span> <span class="o">=</span> <span class="n">arm</span><span class="o">.</span><span class="n">get_IK</span><span class="p">(</span><span class="n">tarPose</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;IK calculation step:DONE&#39;</span> 
+    
+        <span class="c1">## planning with joint target from IK </span>
+        <span class="n">planTraj</span> <span class="o">=</span>  <span class="n">arm</span><span class="o">.</span><span class="n">plan_jointTargetInput</span><span class="p">(</span><span class="n">jointTarg</span><span class="p">)</span>
+        <span class="nb">print</span> <span class="s1">&#39;Planning step with target joint angles:DONE&#39;</span> 
+    
+        <span class="c1">## planning with pose target</span>
+        <span class="c1">#print &#39;Planning step with target pose&#39;   </span>
+        <span class="c1">#planTraj = arm.plan_poseTargetInput(tarPose)</span>
+    
+        <span class="c1">## execution of the movement   </span>
+        <span class="c1">#print &#39;Execution of the plan&#39; </span>
+        <span class="c1"># arm.group[0].execute(planTraj)</span>
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c1">## First initialize moveit_commander and rospy.</span>
+    <span class="n">moveit_commander</span><span class="o">.</span><span class="n">roscpp_initialize</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="n">rospy</span><span class="o">.</span><span class="n">init_node</span><span class="p">(</span><span class="s1">&#39;vector_basic_IK&#39;</span><span class="p">,</span> <span class="n">anonymous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="n">main</span><span class="p">()</span>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, HLP-R team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,95 @@
+HLP-R Dialogue Production
+****************************
+The dialogue module of hlpr_dialogue_production can be used to integrate a dialogue state machine into your code.  You can also run the standalone server in standalone_server.py and use the DialogueAct action (defined in this package) to send dialogue requests to the robot.
+
+Writing Dialogue and Adding Behaviors
+======================================
+The dialogue production code is based on `CoRDial TTS <https://github.com/interaction-lab/cordial-public>`_, from the USC Interaction Lab, which uses Amazon Polly for speech synthesis.  You will need an AWS account in order to use Polly.
+
+This code parses strings with simple `<>` tags for behaviors that should be synchronized to the speech.  These tags take the form `<behavior_name [arg1 arg2 ... argn]>` and will be synchronized to the beginning of the first word that folows the tag.  Although a mechanism for adjusting the timing on a per-behavior basis is provided, this class is not recommended for cases where tight (within 300ms) synchronization is required, since lag in the ROS message system can affect the precise timing.  In practice, this works well for most HRI contexts where behavior timing itself isn't being studied.  CoRDial TTS also automatically extracts visemes and passes them as behaviors to the dialogue system, although these are not currently handled for HLP-R.
+
+Each behavior type takes a controller that provides an interface to an action server that executes the behavior.  How the behaviors should be allocated among controllers depends on the interaction context and what clashes you expect to have between degrees of freedom, but the currently-provided controllers are as follows:
+    * Lookat Controller: Moves the robot's head to look at a point
+        * Behaviors: 
+	    * lookat
+	* Arguments:
+	    * If 1 argument: the frame to look at
+	    * If 4 arguments: a frame and position relative to that frame to look at
+    * Gesture Controller: Moves the robot's arm through predefined key frames
+        * Behaviors:
+	    * wave
+	    * shrug
+	    * thinking
+	* Arguments:
+	    * *none*
+    * Test Controller: Plays a beep sound
+        * Behaviors:
+	    * test
+	* Arguments:
+	    * *none*
+
+You can also provide a "phrase file" to the system, which is a text file where each line is a dialogue act with behaviors in angle brackets, beginning with a unique key in square brackets::
+
+    [ex1] <shrug>This is a phrase file <lookat ee_frame> entry!
+
+The phrase file can be used to pre-load audio files using ``gen_phrases.py``. Run ``gen_phrases.py --help`` for usage information.
+
+Running the Stand-Alone Server
+--------------------------------
+Before you run the server, you will need to have an AWS account and enable your computer to access Polly using Boto3.  Some basic instructions can be found `here <https://aws.amazon.com/sdk-for-python/>`_.
+
+1. Check out the "catkin" branch of `CoRDial <https://github.com/interaction-lab/cordial-public/tree/catkin>`_ and place the cordial_tts package in the src folder of your catkin workspace
+2. Make the messages and services by running ``catkin_make`` in your workspace root directory
+3. Launch the HLP-R/Poli simulation, with the Lookat waypoints server and MoveIt! enabled
+4. Launch the controllers and action server::
+     roslaunch hlpr_dialogue_production all_controllers.launch
+5. Test the setup::
+     rosrun hlpr_dialogue_production test_action_client.py
+
+You should hear speech through your computer speakers and see the robot move.
+
+Adding Controllers
+-------------------
+The currently-implemented controllers can be found in ``controllers.py``.  A ControllerState provides an interface to an ActionServer, providing a callback function that turns the string behavior name and string list of arguments into a goal for that server, and calling the server at the appropriate times relative to the speech audio.  If you would like to implement a controller that you think many folks could use, add it to ``controllers.py`` by adding the following functions, substituting the name of your controller for ``[your]``::
+
+  [your]_controller_cb(behavior_name, string_args)
+
+  get_[your]_controller()
+
+You can then add it to the action server by adding it to the list starting on line 71 of ``standalone_server.py``.
+
+.. warning:: Make sure that neither the state name (given in all caps by smach convention) nor the callback names clash with any of the existing controllers!!
+
+Code API
+===================================
+
+
+.. currentmodule:: hlpr_dialogue_production.dialogue
+
+
+Main Smach Wrapper Class
+----------------------------------
+
+.. autoclass:: SmachWrapper
+   :members:
+
+
+Smach States
+----------------------------------
+.. autoclass:: ControllerState
+   :members:
+
+.. autoclass:: SpeechState
+   :members:
+
+.. autoclass:: TTSSpeechStart
+   :members:
+
+.. autoclass:: TTSFallbackSpeechStart
+   :members:
+
+.. autoclass:: FileSpeechStart
+   :members:
+
+.. autoclass:: NoPrepSpeechStart
+   :members:

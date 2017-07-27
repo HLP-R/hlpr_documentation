@@ -1,0 +1,21 @@
+.. HLP-R Codebase Documentation documentation master file, created by
+   sphinx-quickstart on Wed Jul 26 17:46:04 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to HLP-R Codebase Documentation's documentation!
+========================================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   
+   hlpr_manipulation_utils
+   hlpr_dialogue_production
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

@@ -1,0 +1,15 @@
+HLP-R Manipulation Utilities
+****************************
+
+ArmMoveIt 2 API
+===================================
+
+This class contains all the functionality of the original arm_moveit.py, but with updated, more pythonic, function names, improved documentation, and more and better errors.  
+
+.. currentmodule:: hlpr_manipulation_utils.arm_moveit2
+
+ArmMoveIt 2 Details
+----------------------------------
+
+.. autoclass:: ArmMoveIt
+   :members:

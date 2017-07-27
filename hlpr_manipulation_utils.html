@@ -1,0 +1,1097 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>HLP-R Manipulation Utilities &#8212; HLP-R Codebase Documentation 0.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to HLP-R Codebase Documentation’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to HLP-R Codebase Documentation’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="hlp-r-manipulation-utilities">
+<h1>HLP-R Manipulation Utilities<a class="headerlink" href="#hlp-r-manipulation-utilities" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="armmoveit-2-api">
+<h2>ArmMoveIt 2 API<a class="headerlink" href="#armmoveit-2-api" title="Permalink to this headline">¶</a></h2>
+<p>This class contains all the functionality of the original arm_moveit.py, but with updated, more pythonic, function names, improved documentation, and more and better errors.</p>
+<div class="section" id="armmoveit-2-details">
+<h3>ArmMoveIt 2 Details<a class="headerlink" href="#armmoveit-2-details" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt">
+<em class="property">class </em><code class="descclassname">hlpr_manipulation_utils.arm_moveit2.</code><code class="descname">ArmMoveIt</code><span class="sig-paren">(</span><em>planning_frame='base_link'</em>, <em>default_planner='RRTConnectkConfigDefault'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt" title="Permalink to this definition">¶</a></dt>
+<dd><p>MoveIt! wrapper for planning for the HLP-R robot’s arm(s).</p>
+<p>This class provides a simplified interface to the planning capabilities of
+the MoveIt! ROS packages.  To plan to a specific joint configuration:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">ArmMoveit</span><span class="p">()</span>
+<span class="n">pose</span> <span class="o">=</span> <span class="p">[</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">,</span><span class="n">pi</span><span class="p">]</span>
+
+<span class="n">a</span><span class="o">.</span><span class="n">goto_pose</span><span class="p">(</span><span class="n">pose</span><span class="p">,</span><span class="n">is_joint_pos</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.box_table_scene" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.box_table_scene"><code class="xref py py-obj docutils literal"><span class="pre">box_table_scene</span></code></a>()</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK"><code class="xref py py-obj docutils literal"><span class="pre">get_FK</span></code></a>([root])</td>
+<td>Find the end effector pose for the current joint configuration</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK_wpi" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK_wpi"><code class="xref py py-obj docutils literal"><span class="pre">get_FK_wpi</span></code></a>([joints])</td>
+<td>Find the end effector pose for a given joint configuration</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_IK" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_IK"><code class="xref py py-obj docutils literal"><span class="pre">get_IK</span></code></a>(new_pose[,&nbsp;root,&nbsp;group_id])</td>
+<td>Find the corresponding joint angles for an end effector pose</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_active_joints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_active_joints"><code class="xref py py-obj docutils literal"><span class="pre">get_active_joints</span></code></a>([group_id])</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_current_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_current_pose"><code class="xref py py-obj docutils literal"><span class="pre">get_current_pose</span></code></a>([group_id])</td>
+<td>Returns the current pose of the planning group</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_plan" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_plan"><code class="xref py py-obj docutils literal"><span class="pre">get_plan</span></code></a>([group_id])</td>
+<td>Generates a plan for reaching the current goal</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.merge_points" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.merge_points"><code class="xref py py-obj docutils literal"><span class="pre">merge_points</span></code></a>(points,&nbsp;new_points[,&nbsp;time_between])</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_robot" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_robot"><code class="xref py py-obj docutils literal"><span class="pre">move_robot</span></code></a>(plan[,&nbsp;group_id])</td>
+<td>Moves the robot according to a plan</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_ee_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_ee_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">move_through_ee_waypoints</span></code></a>(targets[,&nbsp;group_id])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_joint_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_joint_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">move_through_joint_waypoints</span></code></a>(targets[,&nbsp;group_id])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">move_through_waypoints</span></code></a>(targets[,&nbsp;…])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_ee_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_ee_pose"><code class="xref py py-obj docutils literal"><span class="pre">move_to_ee_pose</span></code></a>(target[,&nbsp;group_id])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_joint_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_joint_pose"><code class="xref py py-obj docutils literal"><span class="pre">move_to_joint_pose</span></code></a>(target[,&nbsp;group_id])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_pose"><code class="xref py py-obj docutils literal"><span class="pre">move_to_pose</span></code></a>(target[,&nbsp;is_joint_pos,&nbsp;group_id])</td>
+<td>Uses MoveIt! to generate a plan then move the robot.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_pos" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_pos"><code class="xref py py-obj docutils literal"><span class="pre">plan_ee_pos</span></code></a>(target[,&nbsp;starting_config,&nbsp;group_id])</td>
+<td>Plan a trajectory to reach a given end effector position</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">plan_ee_waypoints</span></code></a>(targets[,&nbsp;group_id,&nbsp;…])</td>
+<td>Generates a multi-segment plan to reach end effector waypoints</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_jointTargetInput" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_jointTargetInput"><code class="xref py py-obj docutils literal"><span class="pre">plan_jointTargetInput</span></code></a>(target_joint[,&nbsp;group_id])</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos"><code class="xref py py-obj docutils literal"><span class="pre">plan_joint_pos</span></code></a>(target[,&nbsp;starting_config,&nbsp;…])</td>
+<td>Plan a trajectory to reach a given joint configuration</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">plan_joint_waypoints</span></code></a>(targets[,&nbsp;group_id,&nbsp;…])</td>
+<td>Generates a multi-segment plan to reach waypoints in joint space</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_pose"><code class="xref py py-obj docutils literal"><span class="pre">plan_pose</span></code></a>(target[,&nbsp;is_joint_pos,&nbsp;…])</td>
+<td>Plan a trajectory to reach a given end effector or joint pose</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_poseTargetInput" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_poseTargetInput"><code class="xref py py-obj docutils literal"><span class="pre">plan_poseTargetInput</span></code></a>(target_pose[,&nbsp;group_id])</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInput" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInput"><code class="xref py py-obj docutils literal"><span class="pre">plan_targetInput</span></code></a>(target,&nbsp;joint_flag[,&nbsp;group_id])</td>
+<td><strong>*DEPRECATED*</strong> Generic target planner that what type is specified</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInputWaypoint" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInputWaypoint"><code class="xref py py-obj docutils literal"><span class="pre">plan_targetInputWaypoint</span></code></a>(targets,&nbsp;joint_flag)</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_waypoints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_waypoints"><code class="xref py py-obj docutils literal"><span class="pre">plan_waypoints</span></code></a>(targets[,&nbsp;is_joint_pos,&nbsp;…])</td>
+<td>Generates a multi-segment plan to reach waypoints in target space</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_ee_target" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_ee_target"><code class="xref py py-obj docutils literal"><span class="pre">set_ee_target</span></code></a>(target[,&nbsp;group_id])</td>
+<td>Set the end effector position target</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_joint_target" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_joint_target"><code class="xref py py-obj docutils literal"><span class="pre">set_joint_target</span></code></a>(target[,&nbsp;group_id])</td>
+<td>Set the joint configuration target</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_joint_dict" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_joint_dict"><code class="xref py py-obj docutils literal"><span class="pre">set_robot_state_joint_dict</span></code></a>(joint_dict)</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_pose" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_pose"><code class="xref py py-obj docutils literal"><span class="pre">set_robot_state_pose</span></code></a>(traj)</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_start_state" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_start_state"><code class="xref py py-obj docutils literal"><span class="pre">set_start_state</span></code></a>([joint_config,&nbsp;group_id])</td>
+<td>Set the starting state from which to plan</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_joints" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_joints"><code class="xref py py-obj docutils literal"><span class="pre">state_from_joints</span></code></a>(joints)</td>
+<td>Returns a RobotState object with given joint positions</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_trajectory" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_trajectory"><code class="xref py py-obj docutils literal"><span class="pre">state_from_trajectory</span></code></a>(trajectory[,&nbsp;point_idx])</td>
+<td>Returns a RobotState object with joint positions from trajectory</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.wayPointIK" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.wayPointIK"><code class="xref py py-obj docutils literal"><span class="pre">wayPointIK</span></code></a>(wps[,&nbsp;numSteps,&nbsp;ik_root])</td>
+<td><strong>*DEPRECATED*</strong> Left in for backwards compatibility</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.box_table_scene">
+<code class="descname">box_table_scene</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.box_table_scene"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.box_table_scene" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK">
+<code class="descname">get_FK</code><span class="sig-paren">(</span><em>root='base_link'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_FK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the end effector pose for the current joint configuration</p>
+<p>Uses MoveIt! to compute the forward kinematics for a given joint
+configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>root</strong> : string, optional</p>
+<blockquote>
+<div><p>the root link (if none is provided, uses the planning frame)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">geometry_msgs/PoseStamped</p>
+<blockquote class="last">
+<div><p>the pose of the end effector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK_wpi">
+<code class="descname">get_FK_wpi</code><span class="sig-paren">(</span><em>joints=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_FK_wpi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_FK_wpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the end effector pose for a given joint configuration</p>
+<p>Uses the WPI Jaco wrapper to compute the forward kinematics for a 
+given joint configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>joints</strong> : list, optional</p>
+<blockquote>
+<div><p>the joint positions for which to find the end effector position.
+If not provided, gives FK for all joints set to value of pi.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">geometry_msgs/PoseStamped</p>
+<blockquote class="last">
+<div><p>the pose of the end effector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_IK">
+<code class="descname">get_IK</code><span class="sig-paren">(</span><em>new_pose</em>, <em>root=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_IK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_IK" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the corresponding joint angles for an end effector pose</p>
+<p>Uses MoveIt! to compute the inverse kinematics for a given end
+effector pose.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>new_pose</strong> : geometry_msgs/Pose</p>
+<blockquote>
+<div><p>the end effector pose</p>
+</div></blockquote>
+<p><strong>root</strong> : string, optional</p>
+<blockquote>
+<div><p>the root link (if none is provided, uses the planning frame)</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>The joint angles corresponding to the end effector pose</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_active_joints">
+<code class="descname">get_active_joints</code><span class="sig-paren">(</span><em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_active_joints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_active_joints" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_current_pose">
+<code class="descname">get_current_pose</code><span class="sig-paren">(</span><em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_current_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_current_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current pose of the planning group</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>the joint positions, mapped into (-pi,pi)</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_plan">
+<code class="descname">get_plan</code><span class="sig-paren">(</span><em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.get_plan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.get_plan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a plan for reaching the current goal</p>
+<p>Uses MoveIt! to generate a plan based on the previously-set starting
+position and target position.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You must set the target and starting position before calling
+this function.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.merge_points">
+<code class="descname">merge_points</code><span class="sig-paren">(</span><em>points</em>, <em>new_points</em>, <em>time_between=0.1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.merge_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.merge_points" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_robot">
+<code class="descname">move_robot</code><span class="sig-paren">(</span><em>plan</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_robot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_robot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the robot according to a plan</p>
+<p>Uses MoveIt! to move the arm according to the provided plan.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The plans can be stitched together, but this can 
+have unexpected issues since the plan boundaries can violate 
+acceleration limits.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>plan</strong> : RobotTrajectory</p>
+<blockquote>
+<div><p>a plan generated by MoveIt!</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_ee_waypoints">
+<code class="descname">move_through_ee_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_through_ee_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_ee_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot through the specified end effector 
+or joint pose waypoints, then moves the robot. Returns True on success,
+otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of end effector positions (geometry_msgs/Pose)
+See the documentation for plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_joint_waypoints">
+<code class="descname">move_through_joint_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_through_joint_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_joint_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot through the specified end effector 
+or joint pose waypoints, then moves the robot. Returns True on success,
+otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of joint positions (either list or dict)
+See the documentation for plan_joint_waypoints.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_waypoints">
+<code class="descname">move_through_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>is_joint_pos=False</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_through_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_through_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot through the specified end effector 
+or joint pose waypoints, then moves the robot. Returns True on success,
+otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of either joint positions or end effector positions. 
+See the documentation for plan_joint_waypoints and
+plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>is_joint_pos</strong> : bool, optional</p>
+<blockquote>
+<div><p>True if the targets are given in joint space (defaults to False)</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_ee_pose">
+<code class="descname">move_to_ee_pose</code><span class="sig-paren">(</span><em>target</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_to_ee_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_ee_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot to the specified joint pose, 
+then moves the robot. Returns True on success, otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : geometry_msgs/Pose</p>
+<blockquote>
+<div><p>an end effector position. See the documentation for 
+plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_joint_pose">
+<code class="descname">move_to_joint_pose</code><span class="sig-paren">(</span><em>target</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_to_joint_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_joint_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot to the specified joint pose, 
+then moves the robot. Returns True on success, otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : list or dict</p>
+<blockquote>
+<div><p>a joint position (list or dict). See the documentation for 
+plan_joint_waypoints.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_pose">
+<code class="descname">move_to_pose</code><span class="sig-paren">(</span><em>target</em>, <em>is_joint_pos=False</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.move_to_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.move_to_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Uses MoveIt! to generate a plan then move the robot.</p>
+<p>Generates a plan to move the robot to the specified end effector 
+or joint pose, then moves the robot. Returns True on success,
+otherwise returns False.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : list, dict, or geometry_msgs/Pose</p>
+<blockquote>
+<div><p>either a joint position (list or dict) or end effector position. 
+See the documentation for plan_joint_waypoints and
+plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>is_joint_pos</strong> : bool, optional</p>
+<blockquote>
+<div><p>True if the targets are given in joint space (defaults to False)</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>True on success</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_pos">
+<code class="descname">plan_ee_pos</code><span class="sig-paren">(</span><em>target</em>, <em>starting_config=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_ee_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plan a trajectory to reach a given end effector position</p>
+<p>Uses MoveIt! to plan a trajectory to reach a given end effector
+position</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : geometry_msgs/Pose</p>
+<blockquote>
+<div><p>the desired pose of the end effector</p>
+</div></blockquote>
+<p><strong>starting_config</strong> : RobotState, optional</p>
+<blockquote>
+<div><p>the starting configuration to plan from.  If not set, will 
+be set to the current state of the robot.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_waypoints">
+<code class="descname">plan_ee_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>group_id=0</em>, <em>starting_config=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_ee_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_ee_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a multi-segment plan to reach end effector waypoints</p>
+<p>Uses MoveIt! to generate a plan from target to target. One plan is
+generated for each segment.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The plans can be stitched together, but this can have 
+unexpected issues since the plan boundaries can violate 
+acceleration limits.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of geometry_msgs/Pose for the end effector</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+<p><strong>starting_config</strong> : RobotState</p>
+<blockquote>
+<div><p>the starting state. If not provided this will default to the 
+current state of the robot.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_jointTargetInput">
+<code class="descname">plan_jointTargetInput</code><span class="sig-paren">(</span><em>target_joint</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_jointTargetInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_jointTargetInput" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos">
+<code class="descname">plan_joint_pos</code><span class="sig-paren">(</span><em>target</em>, <em>starting_config=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_joint_pos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plan a trajectory to reach a given joint configuration</p>
+<p>Uses MoveIt! to plan a trajectory to reach a given joint
+configuration</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : list or dict</p>
+<blockquote>
+<div><p>if a list, a list of positions for all active joints 
+in the group; if a dictionary, a mapping of joint names 
+to positions for the joints that should be moved (all other 
+joints will be held at their current angles).</p>
+</div></blockquote>
+<p><strong>starting_config</strong> : RobotState, optional</p>
+<blockquote>
+<div><p>the starting configuration to plan from.  If not set, will 
+be set to the current state of the robot.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_waypoints">
+<code class="descname">plan_joint_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>group_id=0</em>, <em>starting_config=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_joint_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a multi-segment plan to reach waypoints in joint space</p>
+<p>Uses MoveIt! to generate a plan from target to target. One plan is
+generated for each segment.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The plans can be stitched together, but this can 
+have unexpected issues since the plan boundaries can violate 
+acceleration limits.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of joint targets (either list or dict; see documentation 
+for <a class="reference internal" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos" title="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_joint_pos"><code class="xref py py-meth docutils literal"><span class="pre">plan_joint_pos()</span></code></a> )</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+<p><strong>starting_config</strong> : RobotState</p>
+<blockquote>
+<div><p>the starting state. If not provided this will default to the 
+current state of the robot.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_pose">
+<code class="descname">plan_pose</code><span class="sig-paren">(</span><em>target</em>, <em>is_joint_pos=False</em>, <em>starting_config=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plan a trajectory to reach a given end effector or joint pose</p>
+<p>Uses MoveIt! to plan a trajectory to reach a given end effector
+position or joint configuration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : list, dict, or geometry_msgs/Pose</p>
+<blockquote>
+<div><p>either a joint position (list or dict) or end effector position. 
+See the documentation for plan_joint_waypoints and
+plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>is_joint_pos</strong> : bool, optional</p>
+<blockquote>
+<div><p>True if the targets are given in joint space (defaults to False)</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_poseTargetInput">
+<code class="descname">plan_poseTargetInput</code><span class="sig-paren">(</span><em>target_pose</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_poseTargetInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_poseTargetInput" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInput">
+<code class="descname">plan_targetInput</code><span class="sig-paren">(</span><em>target</em>, <em>joint_flag</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_targetInput"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInput" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Generic target planner that what type is specified</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInputWaypoint">
+<code class="descname">plan_targetInputWaypoint</code><span class="sig-paren">(</span><em>targets</em>, <em>joint_flag</em>, <em>merged=False</em>, <em>current_joints=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_targetInputWaypoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_targetInputWaypoint" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_waypoints">
+<code class="descname">plan_waypoints</code><span class="sig-paren">(</span><em>targets</em>, <em>is_joint_pos=False</em>, <em>merge_plans=False</em>, <em>starting_config=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.plan_waypoints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.plan_waypoints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a multi-segment plan to reach waypoints in target space</p>
+<p>Uses MoveIt! to generate a plan from target to target. One plan is
+generated for each segment.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The plans can be stitched together, but this can have 
+unexpected issues since the plan boundaries can violate 
+acceleration limits.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>targets</strong> : list</p>
+<blockquote>
+<div><p>a list of either joint positions or end effector positions. 
+See the documentation for plan_joint_waypoints and
+plan_ee_waypoints.</p>
+</div></blockquote>
+<p><strong>is_joint_pos</strong> : bool, optional</p>
+<blockquote>
+<div><p>True if the targets are given in joint space (defaults to False)</p>
+</div></blockquote>
+<p><strong>merge_plans</strong> : bool</p>
+<blockquote>
+<div><p>if True, return a single merged plan (see note above about 
+potential issues)</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+<p><strong>starting_config</strong> : RobotState</p>
+<blockquote>
+<div><p>the starting state. If not provided this will default to the 
+current state of the robot.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of RobotTrajectory</p>
+<blockquote class="last">
+<div><p>the plan for reaching the target position</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_ee_target">
+<code class="descname">set_ee_target</code><span class="sig-paren">(</span><em>target</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.set_ee_target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_ee_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the end effector position target</p>
+<p>Sets the MoveIt! target position in preparation for planning</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : geometry_msgs/Pose</p>
+<blockquote>
+<div><p>the desired pose of the end effector</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_joint_target">
+<code class="descname">set_joint_target</code><span class="sig-paren">(</span><em>target</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.set_joint_target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_joint_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the joint configuration target</p>
+<p>Sets the MoveIt! target position in preparation for planning</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target (list or dict) – if a list, a list of positions for</strong></p>
+<blockquote>
+<div><p>all active joints in the group; if a dictionary, a mapping
+of joint names to positions for the joints that should be
+moved (all other joints will be held at their current angles).</p>
+</div></blockquote>
+<p><strong>group_id (int) – the index of the group for which to calculate</strong></p>
+<blockquote class="last">
+<div><p>the IK.  Used for compatibility with future functionality; 
+leave set to default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_joint_dict">
+<code class="descname">set_robot_state_joint_dict</code><span class="sig-paren">(</span><em>joint_dict</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.set_robot_state_joint_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_joint_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_pose">
+<code class="descname">set_robot_state_pose</code><span class="sig-paren">(</span><em>traj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.set_robot_state_pose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_robot_state_pose" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_start_state">
+<code class="descname">set_start_state</code><span class="sig-paren">(</span><em>joint_config=None</em>, <em>group_id=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.set_start_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.set_start_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the starting state from which to plan</p>
+<p>Sets the MoveIt! starting position in preparation for planning</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>joint_config (RobotState) – the starting configuration to plan</strong></p>
+<blockquote>
+<div><p>from.  If not set, will be set to the current state of the robot.</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote class="last">
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_joints">
+<code class="descname">state_from_joints</code><span class="sig-paren">(</span><em>joints</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.state_from_joints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_joints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a RobotState object with given joint positions</p>
+<p>Returns a RobotState object with the given joints
+set to the given positions.  The joints may be given
+as a dict or list object.  All other joints are taken from
+the current state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>target</strong> : list or dict</p>
+<blockquote>
+<div><p>if a list, a list of positions for all active joints in 
+the group; if a dictionary, a mapping of joint names to 
+positions for the joints that should be moved (all other 
+joints will be held at their current angles).</p>
+</div></blockquote>
+<p><strong>group_id</strong> : int, optional</p>
+<blockquote>
+<div><p>the index of the group for which to calculate the IK.  Used 
+for compatibility with future functionality; leave set to 
+default for now.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotState</p>
+<blockquote class="last">
+<div><p>A RobotState object with only the given joints changed</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_trajectory">
+<code class="descname">state_from_trajectory</code><span class="sig-paren">(</span><em>trajectory</em>, <em>point_idx=-1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.state_from_trajectory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.state_from_trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a RobotState object with joint positions from trajectory</p>
+<p>Returns a RobotState object with joint positions taken from the 
+given trajectory. By default, sets the position to the last point
+in the trajectory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>trajectory</strong> : JointTrajectory</p>
+<blockquote>
+<div><p>the trajectory from which to take the joint positions.</p>
+</div></blockquote>
+<p><strong>point_idx</strong> : int</p>
+<blockquote>
+<div><p>which point in the trajectory to take the state from. Defaults 
+to -1, taking the last point.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">RobotState</p>
+<blockquote class="last">
+<div><p>A RobotState object with state corresponding to the
+given point in the trajectory.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.wayPointIK">
+<code class="descname">wayPointIK</code><span class="sig-paren">(</span><em>wps</em>, <em>numSteps=None</em>, <em>ik_root=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hlpr_manipulation_utils/arm_moveit2.html#ArmMoveIt.wayPointIK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_manipulation_utils.arm_moveit2.ArmMoveIt.wayPointIK" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>*DEPRECATED*</strong> Left in for backwards compatibility</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">HLP-R Manipulation Utilities</a><ul>
+<li><a class="reference internal" href="#armmoveit-2-api">ArmMoveIt 2 API</a><ul>
+<li><a class="reference internal" href="#armmoveit-2-details">ArmMoveIt 2 Details</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to HLP-R Codebase Documentation’s documentation!</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/hlpr_manipulation_utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to HLP-R Codebase Documentation’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, HLP-R team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>
