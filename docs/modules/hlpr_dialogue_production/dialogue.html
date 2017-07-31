@@ -31,6 +31,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
       </ul>
@@ -74,30 +77,103 @@
 
 <span class="kn">import</span> <span class="nn">rospy</span>
 <span class="kn">import</span> <span class="nn">smach</span>
-<span class="kn">import</span> <span class="nn">smach_ros</span>
-<span class="kn">import</span> <span class="nn">wave</span>
-<span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">import</span> <span class="nn">threading</span>
-<span class="kn">import</span> <span class="nn">actionlib</span>
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">from</span> <span class="nn">sound_play.libsoundplay</span> <span class="k">import</span> <span class="n">SoundClient</span>
-<span class="kn">from</span> <span class="nn">cordial_tts.cordial_tts</span> <span class="k">import</span> <span class="n">CoRDialTTS</span>
+<span class="sd">&#39;&#39;&#39;import smach_ros</span>
+<span class="sd">import wave</span>
+<span class="sd">import yaml</span>
+<span class="sd">import threading</span>
+<span class="sd">import actionlib</span>
+<span class="sd">import contextlib</span>
+<span class="sd">from sound_play.libsoundplay import SoundClient</span>
+<span class="sd">from cordial_tts.cordial_tts import CoRDialTTS&#39;&#39;&#39;</span>
 
-<span class="k">class</span> <span class="nc">Synchronizer</span><span class="p">():</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="kc">None</span>
+<div class="viewcode-block" id="Synchronizer"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.Synchronizer">[docs]</a><span class="k">class</span> <span class="nc">Synchronizer</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Object that can be passed to all controllers to synchronize their start</span>
 
-    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+<span class="sd">    A single Synchronizer object is passed to all controllers so that the</span>
+<span class="sd">    speech state can signal when the audio has begun to play.  This is needed</span>
+<span class="sd">    because online text-to-speech has to download the audio from the internet</span>
+<span class="sd">    before it can begin to play, leading to a variable start time for the</span>
+<span class="sd">    speech audio.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Synchronizer.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.Synchronizer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creates a Synchronizer object&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="Synchronizer.start"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.Synchronizer.start">[docs]</a>    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Sets the state of the Synchronizer to started and saves the time&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">rospy</span><span class="o">.</span><span class="n">Time</span><span class="o">.</span><span class="n">now</span><span class="p">()</span></div>
+    
+<div class="viewcode-block" id="Synchronizer.reset"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.Synchronizer.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Resets the state of the Synchronizer to not started&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">started</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="kc">None</span></div></div>
 
 <div class="viewcode-block" id="ControllerState"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.ControllerState">[docs]</a><span class="k">class</span> <span class="nc">ControllerState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">behaviors</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span> <span class="n">arg_list_to_goal_cb</span><span class="p">,</span> <span class="n">behavior_time_adj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Interface to action servers controlling robot behavior</span>
+
+<span class="sd">    A ControllerState is a smach.State that sends requests to a specific</span>
+<span class="sd">    action server at the appropriate times.</span>
+
+<span class="sd">    .. warning:: After creating the object, you *must* call ``setup_sync`` to    provide the state with a Synchronizer. The Synchronizer is not included in    the constructor so that the object can be created in ``controllers.py`` or    elsewhere in code and passed to the SmachWrapper state, which will then set    up the Synchronizers and assemble the dialogue act state machine.</span>
+
+<span class="sd">    </span>
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            An ordered list of all the behaviors the controller should play. A</span>
+<span class="sd">            behavior is a dict with keys &quot;start&quot;, &quot;id&quot;, and &quot;args&quot;, indicating</span>
+<span class="sd">            the start time (after speech begins), name of the behavior, and any</span>
+<span class="sd">            arguments to the behavior, respectively.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * preempted</span>
+<span class="sd">            The behavior was preempted before playing all the behaviors in the list</span>
+<span class="sd">            to completion.</span>
+<span class="sd">        * done</span>
+<span class="sd">            The controller played all of the behaviors in the list.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="ControllerState.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.ControllerState.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">behaviors</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span> <span class="n">arg_list_to_goal_cb</span><span class="p">,</span> <span class="n">behavior_time_adj</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Creates the ControllerState with the given name, able to handle the</span>
+<span class="sd">        given behaviors by sending the arguments to the arg_list_to_goal_cb</span>
+<span class="sd">        with a time adjustment factor of behavior_time_adj (assigned on a per-</span>
+<span class="sd">        behavior basis).  By convention, the name should be in all caps, and</span>
+<span class="sd">        must not conflict with any other names in the state machine containing</span>
+<span class="sd">        this state.  If using the SmachWrapper, the names &quot;SPEECH&quot;, &quot;START&quot;,</span>
+<span class="sd">        &quot;DIALOGUE&quot; are taken.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of this state in the state machine</span>
+<span class="sd">        </span>
+<span class="sd">        behaviors : list of str</span>
+<span class="sd">            The behaviors (from the speech string tags) that this controller</span>
+<span class="sd">            can handle</span>
+<span class="sd">        </span>
+<span class="sd">        topic : str</span>
+<span class="sd">            The topic for the action server that this controller calls</span>
+<span class="sd">        </span>
+<span class="sd">        action_type : ROS Action Type</span>
+<span class="sd">            The type for the action server that this controller calls</span>
+<span class="sd">        </span>
+<span class="sd">        arg_list_to_goal_cb : function</span>
+<span class="sd">            A function taking the name of the behavior and a list of arguments</span>
+<span class="sd">            and returning a goal for the action of type ``action_type``</span>
+<span class="sd">        </span>
+<span class="sd">        behavior_time_adj : dict</span>
+<span class="sd">            A mapping from behavior names (from ``behaviors``) to times (in s).</span>
+<span class="sd">            The controller will send the action goal that much earlier.</span>
+<span class="sd">            Negative values will cause the controller to call the action</span>
+<span class="sd">            server later.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preempted&quot;</span><span class="p">,</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -108,12 +184,29 @@
         <span class="k">if</span> <span class="n">behavior_time_adj</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_time_adj</span> <span class="o">=</span> <span class="n">behavior_time_adj</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_time_adj</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_time_adj</span> <span class="o">=</span> <span class="p">{}</span></div>
 
-    <span class="k">def</span> <span class="nf">setup_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">synchronizer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="o">=</span><span class="n">synchronizer</span>
+<div class="viewcode-block" id="ControllerState.setup_sync"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.ControllerState.setup_sync">[docs]</a>    <span class="k">def</span> <span class="nf">setup_sync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">synchronizer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Provides the controller with a Synchronizer object</span>
+
+<span class="sd">        This provides the controller with information about when the speech</span>
+<span class="sd">        audio has begun.  This will only work if the controller and speech</span>
+<span class="sd">        state share the same Synchronizer object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        synchronizer : Synchronizer</span>
+<span class="sd">           A synchronizer object.  All controllers, including the speech state,</span>
+<span class="sd">           should share the same synchronizer.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="o">=</span><span class="n">synchronizer</span></div>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">userdata</span><span class="o">.</span><span class="n">ordered_behaviors</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Controller </span><span class="si">{}</span><span class="s2"> got empty behavior list&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">return</span> <span class="s2">&quot;done&quot;</span>
+
         <span class="n">ordered_behaviors</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_can_handle</span><span class="p">,</span>
                                           <span class="n">userdata</span><span class="o">.</span><span class="n">ordered_behaviors</span><span class="p">)</span>
 
@@ -154,11 +247,47 @@
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
 <div class="viewcode-block" id="TTSSpeechStart"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.TTSSpeechStart">[docs]</a><span class="k">class</span> <span class="nc">TTSSpeechStart</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Speech prep state when using TTS</span>
+
+<span class="sd">    State to process marked text to ordered behaviors, unmarked text, and an</span>
+<span class="sd">    empty wav_file, that can be passed on to the Speech state.</span>
+
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * marked_text : str</span>
+<span class="sd">            Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to</span>
+<span class="sd">            the word following the tag.</span>
+
+<span class="sd">    **Output keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to</span>
+<span class="sd">            the word following the tag.</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;. Ordered by start time.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            Always None</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TTSSpeechStart.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.TTSSpeechStart.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Initializes TTS for speech using Amazon Polly with the given voice</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        voice : str, optional</span>
+<span class="sd">            Which Amazon Polly voice to use. Defaults to Kimberly</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;marked_text&quot;</span><span class="p">],</span>
                              <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_tts</span> <span class="o">=</span> <span class="n">CoRDialTTS</span><span class="p">(</span><span class="n">voice</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tts</span> <span class="o">=</span> <span class="n">CoRDialTTS</span><span class="p">(</span><span class="n">voice</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
         <span class="n">text</span><span class="p">,</span> <span class="n">behaviors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tts</span><span class="o">.</span><span class="n">extract_behaviors</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">marked_text</span><span class="p">)</span>
@@ -169,12 +298,55 @@
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
 <div class="viewcode-block" id="TTSFallbackSpeechStart"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart">[docs]</a><span class="k">class</span> <span class="nc">TTSFallbackSpeechStart</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phrases</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Speech prep from file with online TTS fallback</span>
+
+<span class="sd">    State to read text, wave file, and ordered behaviors from a phrase file,</span>
+<span class="sd">    given a key into that file. If the key isn&#39;t found, uses online TTS using</span>
+<span class="sd">    Amazon Polly.  This is useful for debugging or if there are a small number</span>
+<span class="sd">    of phrases that can&#39;t be known in advance.</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * key_or_marked_text : str</span>
+<span class="sd">            Either a key into the phrase file or text marked up with</span>
+<span class="sd">            &lt;behavior tags&gt;.  The state tries to read from the phrase file</span>
+<span class="sd">            with this string.  If it&#39;s not found, assume it is marked up text</span>
+<span class="sd">            and generate the audio with TTS</span>
+
+<span class="sd">    **Output keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to</span>
+<span class="sd">            the word following the tag.</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;. Ordered by start time.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            None if the audio needs to be fetched, otherwise the path to the</span>
+<span class="sd">            audio file.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="TTSFallbackSpeechStart.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phrases</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Initializes TTS for speech using Amazon Polly with the given voice, and</span>
+<span class="sd">        reads in the phrase file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        voice : str, optional</span>
+<span class="sd">            Which Amazon Polly voice to use. Defaults to Kimberly</span>
+
+<span class="sd">        phrases : str</span>
+<span class="sd">            Path to the phrase file to use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">],</span>
                              <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tts</span> <span class="o">=</span> <span class="n">CoRDialTTS</span><span class="p">(</span><span class="n">voice</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span> <span class="o">=</span> <span class="n">phrases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span> <span class="o">=</span> <span class="n">phrases</span></div>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">userdata</span><span class="o">.</span><span class="n">key_or_marked_text</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span><span class="p">:</span>
@@ -194,12 +366,101 @@
         <span class="n">userdata</span><span class="o">.</span><span class="n">wav_file</span> <span class="o">=</span> <span class="n">wav_file</span>
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
+<span class="k">class</span> <span class="nc">DebugSpeechStart</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Debugging speech state with no audio</span>
+
+<span class="sd">    Prints the values of the provided userdata, allowing for debugging.  Doesn&#39;t</span>
+<span class="sd">    actually play any sound.</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * behaviors : list of dict</span>
+<span class="sd">             A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;.</span>
+<span class="sd">        * wav_file_loc : str</span>
+<span class="sd">             The path to the audio file to play</span>
+<span class="sd">        * key_or_marked_text : str</span>
+<span class="sd">            Either a key into the phrase file or text marked up with</span>
+<span class="sd">            &lt;behavior tags&gt;.  </span>
+
+<span class="sd">    **Output keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to</span>
+<span class="sd">            the word following the tag.</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;. Ordered by start time.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            None if the audio needs to be fetched, otherwise the path to the</span>
+<span class="sd">            audio file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
+                             <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">,</span> <span class="s2">&quot;behaviors&quot;</span><span class="p">,</span> 
+                                         <span class="s2">&quot;wav_file_loc&quot;</span><span class="p">],</span>
+                             <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">userdata</span><span class="o">.</span><span class="n">ordered_behaviors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span><span class="p">,</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">userdata</span><span class="o">.</span><span class="n">ordered_behaviors</span> <span class="o">=</span> <span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span>
+        <span class="n">userdata</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">userdata</span><span class="o">.</span><span class="n">key_or_marked_text</span>
+        <span class="n">userdata</span><span class="o">.</span><span class="n">wav_file</span> <span class="o">=</span> <span class="n">userdata</span><span class="o">.</span><span class="n">wav_file_loc</span>
+
+               
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Speech debug info:&quot;</span><span class="p">)</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Ordered Behaviors: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span><span class="p">))</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Text: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">key_or_marked_text</span><span class="p">))</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logwarn</span><span class="p">(</span><span class="s2">&quot;Wave file: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">wav_file_loc</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="s2">&quot;done&quot;</span>
+
+
+
 <div class="viewcode-block" id="FileSpeechStart"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.FileSpeechStart">[docs]</a><span class="k">class</span> <span class="nc">FileSpeechStart</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phrases</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Speech prep from file</span>
+
+<span class="sd">    State to read text, wave file, and ordered behaviors from a phrase file,</span>
+<span class="sd">    given a key into that file.</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * key : str</span>
+<span class="sd">            A key into the phrase file</span>
+
+<span class="sd">    **Output keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            If the text is included in the phrase file, the text, otherwise</span>
+<span class="sd">            None</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;.  Ordered by start time.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            The path to the audio file.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors</span>
+<span class="sd">        * not_found</span>
+<span class="sd">            Unable to find the key in the phrase file</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FileSpeechStart.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.FileSpeechStart.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">phrases</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Initializes TTS for speech using a phrase file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        phrases : str</span>
+<span class="sd">            Path to the phrase file to use.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">,</span><span class="s2">&quot;not_found&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">],</span>
                              <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span> <span class="o">=</span> <span class="n">phrases</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span> <span class="o">=</span> <span class="n">phrases</span></div>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">userdata</span><span class="o">.</span><span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phrases</span><span class="p">:</span>
@@ -218,10 +479,43 @@
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
 <div class="viewcode-block" id="NoPrepSpeechStart"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.NoPrepSpeechStart">[docs]</a><span class="k">class</span> <span class="nc">NoPrepSpeechStart</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Pass through speech info without prep</span>
+
+<span class="sd">    State for the case where the dialogue state machine will be given text,</span>
+<span class="sd">    behaviors (not necessarily ordered), and a path to a wave file in</span>
+<span class="sd">    the userdata.</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * behaviors : list of dict</span>
+<span class="sd">             A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;.</span>
+<span class="sd">        * wav_file_loc : str</span>
+<span class="sd">             The path to the audio file to play</span>
+
+<span class="sd">    **Output keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Always None</span>
+<span class="sd">        * ordered_behaviors : list of dict</span>
+<span class="sd">            A list of behavior dictionaries.  A behavior has the keys &quot;id&quot;,</span>
+<span class="sd">            &quot;start&quot;, and &quot;args&quot;. Ordered by start time.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            The path to the audio file.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors</span>
+<span class="sd">        * missing_info</span>
+<span class="sd">            Missing information in the input keys</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NoPrepSpeechStart.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.NoPrepSpeechStart.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Initializes passthrough state for speech features.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;done&quot;</span><span class="p">,</span><span class="s2">&quot;missing_info&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file_loc&quot;</span><span class="p">],</span>
-                             <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
+                             <span class="n">output_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span></div>
 
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span><span class="o">==</span><span class="kc">None</span><span class="p">:</span>
@@ -231,23 +525,101 @@
         <span class="n">behaviors</span> <span class="o">=</span> <span class="n">userdata</span><span class="o">.</span><span class="n">behaviors</span>
         <span class="n">text</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">wav_file</span> <span class="o">=</span> <span class="n">userdata</span><span class="o">.</span><span class="n">wav_file</span>
-
+        
         <span class="n">userdata</span><span class="o">.</span><span class="n">ordered_behaviors</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">behaviors</span><span class="p">,</span><span class="n">key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">b</span><span class="p">:</span> <span class="n">b</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">])</span>
         <span class="n">userdata</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
         <span class="n">userdata</span><span class="o">.</span><span class="n">wav_file</span> <span class="o">=</span> <span class="n">wav_file</span>
+ 
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
-       
+<span class="k">class</span> <span class="nc">SpeechDebugState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Speech debug state</span>
+<span class="sd">    </span>
+<span class="sd">    Doesn&#39;t do anything, allowing for debugging of speech input without</span>
+<span class="sd">    requiring tts or audio files.</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Can be None; the text version of the robot&#39;s speech.  Used to print</span>
+<span class="sd">            to the screen.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            Can be None if TTS is on. The path to the audio file.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors. Always returns this.</span>
+<span class="sd">        * no_audio</span>
+<span class="sd">            Couldn&#39;t find the wave file, or no wave file provided and TTS</span>
+<span class="sd">            turned off. Never returns this.</span>
+<span class="sd">        * preempted</span>
+<span class="sd">            State was preempted before audio finished playing.  If preempted,</span>
+<span class="sd">            will try to stop the audio. Never returns this.</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">synchronizer</span><span class="p">):</span>
+        
+        <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preempted&quot;</span><span class="p">,</span><span class="s2">&quot;no_audio&quot;</span><span class="p">,</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
+                             <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span> <span class="o">=</span> <span class="n">synchronizer</span>
+
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;done&quot;</span>
 
 <div class="viewcode-block" id="SpeechState"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SpeechState">[docs]</a><span class="k">class</span> <span class="nc">SpeechState</span><span class="p">(</span><span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_tts</span><span class="p">,</span> <span class="n">synchronizer</span><span class="p">,</span> <span class="n">phrases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Speech player state</span>
+
+<span class="sd">    Takes in text and/or a wave file.  Given a wave file, plays the file.</span>
+<span class="sd">    If no wave file is provided and text-to-speech is on, fetch the audio from</span>
+<span class="sd">    Amazon Polly and play the audio.  If no wave file is provided and text-to-</span>
+<span class="sd">    speech is off, return &quot;no_audio&quot;</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * text : str</span>
+<span class="sd">            Can be None; the text version of the robot&#39;s speech.  Used to print</span>
+<span class="sd">            to the screen.</span>
+<span class="sd">        * wav_file : str</span>
+<span class="sd">            Can be None if TTS is on. The path to the audio file.</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Finished fetching behaviors</span>
+<span class="sd">        * no_audio</span>
+<span class="sd">            Couldn&#39;t find the wave file, or no wave file provided and TTS</span>
+<span class="sd">            turned off</span>
+<span class="sd">        * preempted</span>
+<span class="sd">            State was preempted before audio finished playing.  If preempted,</span>
+<span class="sd">            will try to stop the audio.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SpeechState.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SpeechState.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_tts</span><span class="p">,</span> <span class="n">synchronizer</span><span class="p">,</span> <span class="n">phrases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+
+<span class="sd">        Initializes the speech state with the desired parameters; either with</span>
+<span class="sd">        or without online TTS, and with or without a pre-generated phrase</span>
+<span class="sd">        file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        use_tts : bool</span>
+<span class="sd">            If true, allow online TTS</span>
+<span class="sd">        synchronizer : Synchronizer</span>
+<span class="sd">            Synchronizer object to allow sync of speech and behaviors.  Should</span>
+<span class="sd">            be the same object as is passed to behavior ControllerState objects</span>
+<span class="sd">            with ``setup_sync``</span>
+<span class="sd">        voice : str, optional</span>
+<span class="sd">            Which Amazon Polly voice to use. Defaults to Kimberly</span>
+
+<span class="sd">        phrases : str, optional</span>
+<span class="sd">            Path to the phrase file to use. If None, require online TTS.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">smach</span><span class="o">.</span><span class="n">State</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preempted&quot;</span><span class="p">,</span><span class="s2">&quot;no_audio&quot;</span><span class="p">,</span><span class="s2">&quot;done&quot;</span><span class="p">],</span>
                              <span class="n">input_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">,</span><span class="s2">&quot;wav_file&quot;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tts</span> <span class="o">=</span> <span class="n">use_tts</span>
         <span class="k">if</span> <span class="n">use_tts</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_talker</span> <span class="o">=</span> <span class="n">CoRDialTTS</span><span class="p">(</span><span class="n">voice</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sound_client</span> <span class="o">=</span> <span class="n">SoundClient</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span> <span class="o">=</span> <span class="n">synchronizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span> <span class="o">=</span> <span class="n">synchronizer</span></div>
  
     <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">userdata</span><span class="p">):</span>
         <span class="n">rospy</span><span class="o">.</span><span class="n">loginfo</span><span class="p">(</span><span class="s2">&quot;Saying: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">userdata</span><span class="o">.</span><span class="n">text</span><span class="p">))</span>
@@ -277,8 +649,78 @@
         <span class="k">return</span> <span class="s2">&quot;done&quot;</span></div>
 
 <div class="viewcode-block" id="SmachWrapper"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper">[docs]</a><span class="k">class</span> <span class="nc">SmachWrapper</span><span class="p">():</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_tts</span><span class="p">,</span> <span class="n">phrases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">controllers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">use_tts</span> <span class="ow">and</span> <span class="n">phrases</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; SmachWrapper to set up dialogue state machine </span>
+
+<span class="sd">    Given a set of controllers, this class will put together a state machine</span>
+<span class="sd">    that allows simultaneous speech and behaviors.  You can either run the</span>
+<span class="sd">    state machine by calling ``standalone_start`` with the appropriate userdata,</span>
+<span class="sd">    or you can call ``get_sm`` to get a reference to the internal state machine</span>
+<span class="sd">    and use it as a state in a larger smach state machine.  The input keys and</span>
+<span class="sd">    outcomes of the state machine depend on the options passed to the </span>
+<span class="sd">    constructor; they may include:</span>
+
+<span class="sd">    **Input keys**</span>
+<span class="sd">        * key_or_marked_text : str</span>
+<span class="sd">            If a phrase file is provided and use_tts is true, or debug is true,</span>
+<span class="sd">            provides either a key into the phrase file or marked-up text to say</span>
+<span class="sd">            with online TTS</span>
+<span class="sd">        * key : str</span>
+<span class="sd">            If a phrase file is provided and use_tts is false, provides a key</span>
+<span class="sd">            into the phrase file.</span>
+<span class="sd">        * marked_text : str</span>
+<span class="sd">            If no phrase file is provided and use_tts is true, contains</span>
+<span class="sd">            marked-up text to say with online TTS</span>
+<span class="sd">        * behaviors : list of dict</span>
+<span class="sd">            If no phrase file is provided and use_tts is false, or debug is true</span>
+<span class="sd">            directly provides the behaviors for the robot to execute.  A </span>
+<span class="sd">            behavior has the keys &quot;id&quot;, &quot;start&quot;, and &quot;args&quot;.</span>
+<span class="sd">        * wav_file_loc : list of dict</span>
+<span class="sd">            If no phrase file is provided and use_tts is false, or debug is true</span>
+<span class="sd">            directly provides a path to an audio file for the robot to play</span>
+
+<span class="sd">    **Outcomes**</span>
+<span class="sd">        * done</span>
+<span class="sd">            Successfully played the dialogue act. This is always a potential</span>
+<span class="sd">            outcome of the state machine.</span>
+<span class="sd">        * preempted</span>
+<span class="sd">            The state machine was preempted.  This is always a potential outcome</span>
+<span class="sd">            of the state machine.</span>
+<span class="sd">        * not_found</span>
+<span class="sd">            If not using tts, indicates that the key was not found in the phrase</span>
+<span class="sd">            file</span>
+<span class="sd">        * missing_info</span>
+<span class="sd">            If neither using tts nor a phrase file, indicates that the robot was</span>
+<span class="sd">            not provided with behaviors and an audio file in the input userdata</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SmachWrapper.__init__"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_tts</span><span class="p">,</span> <span class="n">phrases</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">controllers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">voice</span><span class="o">=</span><span class="s2">&quot;Kimberly&quot;</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Constructor</span>
+<span class="sd">        </span>
+<span class="sd">        Creates a state machine according to the provided options.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        use_tts : bool</span>
+<span class="sd">            Whether or not to use online TTS from Amazon Polly</span>
+
+<span class="sd">        phrases : str, optional</span>
+<span class="sd">            Path to the phrase file to use. Defaults to None.</span>
+
+<span class="sd">        controllers : list of ControllerState, optional</span>
+<span class="sd">            The set of controllers to use for speech.  If not provided, the</span>
+<span class="sd">            state machine will play audio but no behaviors.</span>
+
+<span class="sd">        voice : str, optional</span>
+<span class="sd">            Which Amazon Polly voice to use. Defaults to Kimberly</span>
+
+<span class="sd">        debug : bool, optional</span>
+<span class="sd">            If true, start in debug mode, with no audio or behaviors.  Defaults</span>
+<span class="sd">            to false.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="n">condition</span><span class="o">=</span><span class="s2">&quot;debug&quot;</span>
+            <span class="n">outcomes</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;preempted&quot;</span><span class="p">,</span><span class="s2">&quot;done&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">use_tts</span> <span class="ow">and</span> <span class="n">phrases</span><span class="o">!=</span><span class="kc">None</span><span class="p">:</span>
             <span class="n">condition</span> <span class="o">=</span> <span class="s2">&quot;tts_fallback&quot;</span>
             <span class="n">outcomes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;preempted&quot;</span><span class="p">,</span><span class="s2">&quot;done&quot;</span><span class="p">]</span>
             <span class="c1">#input_keys = [&quot;key_or_marked_text&quot;]</span>
@@ -304,6 +746,10 @@
 
 
         <span class="k">def</span> <span class="nf">cc_child_term_cb</span><span class="p">(</span><span class="n">outcome_map</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">==</span><span class="s2">&quot;debug&quot;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s2">&quot;SPEECH&quot;</span> <span class="ow">in</span> <span class="n">outcome_map</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+            
             <span class="n">others</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">outcome</span> <span class="ow">in</span> <span class="n">outcome_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">others</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outcome</span><span class="p">)</span>
@@ -327,9 +773,14 @@
         
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cc</span><span class="p">:</span>
-            <span class="n">smach</span><span class="o">.</span><span class="n">Concurrence</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;SPEECH&quot;</span><span class="p">,</span> <span class="n">SpeechState</span><span class="p">(</span><span class="n">use_tts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="p">,</span> <span class="n">phrases</span><span class="p">,</span><span class="n">voice</span><span class="p">),</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">==</span><span class="s2">&quot;debug&quot;</span><span class="p">:</span>
+                <span class="n">smach</span><span class="o">.</span><span class="n">Concurrence</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;SPEECH&quot;</span><span class="p">,</span> <span class="n">SpeechDebugState</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="p">),</span>
                             <span class="n">remapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
                                        <span class="s2">&quot;wav_file&quot;</span><span class="p">:</span><span class="s2">&quot;wav_file&quot;</span><span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">smach</span><span class="o">.</span><span class="n">Concurrence</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;SPEECH&quot;</span><span class="p">,</span> <span class="n">SpeechState</span><span class="p">(</span><span class="n">use_tts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="p">,</span> <span class="n">phrases</span><span class="p">,</span><span class="n">voice</span><span class="p">),</span>
+                                      <span class="n">remapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+                                                 <span class="s2">&quot;wav_file&quot;</span><span class="p">:</span><span class="s2">&quot;wav_file&quot;</span><span class="p">})</span>
             <span class="k">if</span> <span class="n">controllers</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">controllers</span><span class="p">:</span>
                     <span class="n">c</span><span class="o">.</span><span class="n">setup_sync</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="p">)</span>
@@ -339,7 +790,15 @@
                 
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">condition</span><span class="o">==</span><span class="s2">&quot;tts_fallback&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">condition</span><span class="o">==</span><span class="s2">&quot;debug&quot;</span><span class="p">:</span>
+                <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;START&quot;</span><span class="p">,</span><span class="n">DebugSpeechStart</span><span class="p">(),</span>
+                                       <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;done&quot;</span><span class="p">:</span><span class="s2">&quot;DIALOGUE&quot;</span><span class="p">},</span>
+                                       <span class="n">remapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">:</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">,</span>
+                                                  <span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+                                                  <span class="s2">&quot;wav_file_loc&quot;</span><span class="p">:</span><span class="s2">&quot;wav_file_loc&quot;</span><span class="p">,</span>
+                                                  <span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">:</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span>
+                                                  <span class="s2">&quot;wav_file&quot;</span><span class="p">:</span><span class="s2">&quot;wav_file&quot;</span><span class="p">})</span>
+            <span class="k">elif</span> <span class="n">condition</span><span class="o">==</span><span class="s2">&quot;tts_fallback&quot;</span><span class="p">:</span>
                 <span class="n">smach</span><span class="o">.</span><span class="n">StateMachine</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;START&quot;</span><span class="p">,</span><span class="n">TTSFallbackSpeechStart</span><span class="p">(</span><span class="n">phrases</span><span class="p">),</span>
                                        <span class="n">transitions</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;done&quot;</span><span class="p">:</span><span class="s2">&quot;DIALOGUE&quot;</span><span class="p">},</span>
                                        <span class="n">remapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">:</span><span class="s2">&quot;key_or_marked_text&quot;</span><span class="p">,</span>
@@ -376,9 +835,19 @@
                                                 <span class="s2">&quot;preempted&quot;</span><span class="p">:</span><span class="s2">&quot;preempted&quot;</span><span class="p">},</span>
                                    <span class="n">remapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;wav_file&quot;</span><span class="p">:</span><span class="s2">&quot;wav_file&quot;</span><span class="p">,</span>
                                               <span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">:</span><span class="s2">&quot;ordered_behaviors&quot;</span><span class="p">,</span>
-                                              <span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;text&quot;</span><span class="p">})</span>
-    <span class="k">def</span> <span class="nf">get_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span>
+                                              <span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;text&quot;</span><span class="p">})</span></div>
+<div class="viewcode-block" id="SmachWrapper.get_sm"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.get_sm">[docs]</a>    <span class="k">def</span> <span class="nf">get_sm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the state machine</span>
+<span class="sd">        </span>
+<span class="sd">        .. warning:: Trying to run the state machine multiple times can have unexpected results.  If you need to run it multiple times in various places in your code, use the ``standalone_start`` function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        smach.StateMachine</span>
+<span class="sd">            A reference to the state machine constructed by this object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span></div>
 
     <span class="k">def</span> <span class="nf">_service_preempt_for_children</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">sm</span><span class="p">):</span>
         <span class="n">sm</span><span class="o">.</span><span class="n">service_preempt</span><span class="p">()</span>
@@ -389,32 +858,88 @@
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span>
 
-    <span class="k">def</span> <span class="nf">standalone_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="o">.</span><span class="n">execute</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<div class="viewcode-block" id="SmachWrapper.standalone_start"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.standalone_start">[docs]</a>    <span class="k">def</span> <span class="nf">standalone_start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">userdata_dict</span><span class="o">=</span><span class="p">{}):</span>
+        <span class="sd">&quot;&quot;&quot; Runs the state machine on its own.</span>
 
-    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">        This function resets all states in the state machine, sets the</span>
+<span class="sd">        userdata using the provided dictionary (be sure it matches the</span>
+<span class="sd">        input_keys for the options you have selected), and runs the state</span>
+<span class="sd">        machine.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        userdata_dict : dict</span>
+<span class="sd">            A dictionary of values to update the userdata.  Which values need</span>
+<span class="sd">            to be included depends on the options you provided when creating</span>
+<span class="sd">            this object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">userdata</span> <span class="o">=</span> <span class="n">smach</span><span class="o">.</span><span class="n">UserData</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">userdata_dict</span><span class="p">:</span>
+            <span class="n">userdata</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">userdata_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_s</span><span class="o">.</span><span class="n">get_sm</span><span class="p">()</span><span class="o">.</span><span class="n">set_initial_state</span><span class="p">([</span><span class="s2">&quot;START&quot;</span><span class="p">],</span><span class="n">userdata</span><span class="o">=</span><span class="n">userdata</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="o">.</span><span class="n">execute</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SmachWrapper.reset"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Reset the state machine</span>
+
+<span class="sd">        Resets preemption in the state machine and resets the synchronizer.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sync</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_service_preempt_for_children</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">=</span><span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span><span class="o">=</span><span class="kc">None</span></div>
 
-    <span class="k">def</span> <span class="nf">get_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span>
+<div class="viewcode-block" id="SmachWrapper.get_outcome"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.get_outcome">[docs]</a>    <span class="k">def</span> <span class="nf">get_outcome</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the outcome of the state machine.</span>
+<span class="sd">        </span>
+<span class="sd">        After the state machine has run to completion, this will return the</span>
+<span class="sd">        outcome.</span>
 
-    <span class="k">def</span> <span class="nf">preempt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1">#self.preempter.preempt()</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">           The outcome of the state machine.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outcome</span></div>
+
+<div class="viewcode-block" id="SmachWrapper.preempt"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.preempt">[docs]</a>    <span class="k">def</span> <span class="nf">preempt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Preempt the state machine.</span>
+
+<span class="sd">        Useful in the case where the state machine is running inside an action</span>
+<span class="sd">        server</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="o">.</span><span class="n">request_preempt</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">is_running</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span>
+<div class="viewcode-block" id="SmachWrapper.is_running"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.is_running">[docs]</a>    <span class="k">def</span> <span class="nf">is_running</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns whether the state machine is currently running</span>
 
-    <span class="k">def</span> <span class="nf">get_active_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        bool</span>
+<span class="sd">            Whether or not the state machine is currently running</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="o">.</span><span class="n">isAlive</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SmachWrapper.get_active_states"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.dialogue.SmachWrapper.get_active_states">[docs]</a>    <span class="k">def</span> <span class="nf">get_active_states</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the currently-active states</span>
+
+<span class="sd">        If the machine is running, returns all currently-active states.</span>
+<span class="sd">        Otherwise, returns None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of str</span>
+<span class="sd">            The names of the currently-active states</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="o">.</span><span class="n">is_running</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sm</span><span class="o">.</span><span class="n">get_active_states</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span></div>
+            <span class="k">return</span> <span class="kc">None</span></div></div>
+        
 </pre></div>
 
           </div>
@@ -442,6 +967,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="../../genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
       </ul>

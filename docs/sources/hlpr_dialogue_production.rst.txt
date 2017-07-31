@@ -46,7 +46,7 @@ Before you run the server, you will need to have an AWS account and enable your 
 5. Test the setup::
      rosrun hlpr_dialogue_production test_action_client.py
 
-You should hear speech through your computer speakers and see the robot move.
+You should hear speech through your computer speakers and see the robot move.  For more information on the options to the stand-alone action server, run ``rosrun hlpr_dialogue_production standalone_server.py --help``.
 
 Adding Controllers
 -------------------
@@ -64,32 +64,44 @@ Code API
 ===================================
 
 
-.. currentmodule:: hlpr_dialogue_production.dialogue
 
+
+Controllers
+-----------
+
+.. automodule:: hlpr_dialogue_production.controllers
+   :members:
 
 Main Smach Wrapper Class
 ----------------------------------
 
+.. currentmodule:: hlpr_dialogue_production.dialogue
+
 .. autoclass:: SmachWrapper
-   :members:
+   :members: __init__, get_active_states, get_outcome, get_sm, is_running, preempt, reset, standalone_start
 
 
-Smach States
-----------------------------------
+Smach States and Related Classes
+---------------------------------
+.. automodule:: dialogue
+
+.. autoclass:: Synchronizer
+   :members: __init__, start, reset
+
 .. autoclass:: ControllerState
-   :members:
-
-.. autoclass:: SpeechState
-   :members:
+   :members: __init__, setup_sync
 
 .. autoclass:: TTSSpeechStart
-   :members:
+   :members: __init__
 
 .. autoclass:: TTSFallbackSpeechStart
-   :members:
+   :members: __init__
 
 .. autoclass:: FileSpeechStart
-   :members:
+   :members: __init__
 
 .. autoclass:: NoPrepSpeechStart
-   :members:
+   :members: __init__
+
+.. autoclass:: SpeechState
+   :members: __init__

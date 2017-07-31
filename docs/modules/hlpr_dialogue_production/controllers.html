@@ -1,0 +1,288 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>hlpr_dialogue_production.controllers &#8212; HLP-R Codebase Documentation 0.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head>
+  <body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hlpr_dialogue_production.controllers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="c1"># Copyright (c) 2017, Elaine Short, SIM Lab</span>
+<span class="c1"># All rights reserved.</span>
+<span class="c1"># </span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions are met:</span>
+<span class="c1"># </span>
+<span class="c1"># * Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#   list of conditions and the following disclaimer.</span>
+<span class="c1"># </span>
+<span class="c1"># * Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#   this list of conditions and the following disclaimer in the documentation</span>
+<span class="c1">#   and/or other materials provided with the distribution.</span>
+<span class="c1"># </span>
+<span class="c1"># * Neither the name of the SIM Lab nor the names of its</span>
+<span class="c1">#   contributors may be used to endorse or promote products derived from</span>
+<span class="c1">#   this software without specific prior written permission.</span>
+<span class="c1"># </span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS &quot;AS IS&quot;</span>
+<span class="c1"># AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE</span>
+<span class="c1"># IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE</span>
+<span class="c1"># DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE</span>
+<span class="c1"># FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c1"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR</span>
+<span class="c1"># SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER</span>
+<span class="c1"># CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,</span>
+<span class="c1"># OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE</span>
+<span class="c1"># OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+<span class="sd">&quot;&quot;&quot;Defines functions to create behavior controllers for dialogue production.</span>
+
+<span class="sd">This module contains functions that create controllers for each of the</span>
+<span class="sd">behaviors that one might want to synchronize with robot speech.  Currently,</span>
+<span class="sd">this includes looking at a point in space, executing a gesture with pre-</span>
+<span class="sd">defined waypoints, and a test controller that just plays a beeping sound (and</span>
+<span class="sd">can be used to check synchronization).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">import</span> <span class="nn">rospy</span>
+<span class="kn">import</span> <span class="nn">smach</span>
+<span class="kn">import</span> <span class="nn">smach_ros</span>
+<span class="kn">import</span> <span class="nn">actionlib</span>
+<span class="kn">import</span> <span class="nn">random</span>
+
+<span class="c1">#from geometry_msgs.msg import TransformStamped, Transform, Vector3, Quaternion</span>
+<span class="c1">#from std_msgs.msg import Header</span>
+<span class="c1">#import hlpr_dialogue_production.msg as dialogue_msgs</span>
+
+
+<span class="c1">#from hlpr_dialogue_production.dialogue import ControllerState</span>
+<span class="c1">#import hlpr_lookat.msg</span>
+
+
+<span class="c1">#import actionlib_tutorials.msg</span>
+
+
+<div class="viewcode-block" id="lookat_controller_cb"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.lookat_controller_cb">[docs]</a><span class="k">def</span> <span class="nf">lookat_controller_cb</span><span class="p">(</span><span class="n">behavior_name</span><span class="p">,</span> <span class="n">string_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback to create a LookatAction goal from string arguments</span>
+<span class="sd">    </span>
+<span class="sd">    Given a string of arguments (pulled from the behavior tags in a speech</span>
+<span class="sd">    string), determines whether the robot should look at the base of the</span>
+<span class="sd">    frame or a point relative to the frame.  Prints a warning message to the</span>
+<span class="sd">    screen and returns None if the number of arguments is incorrect or they</span>
+<span class="sd">    are of the wrong type, but does not check that the first argument is a</span>
+<span class="sd">    valid frame (if it is not, the LookatWaypoints action server will return</span>
+<span class="sd">    the error instead). </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    behavior_name : str</span>
+<span class="sd">        The name of the behavior being handled (right now, this will always</span>
+<span class="sd">        be &quot;lookat&quot;)</span>
+<span class="sd">    string_args : list of str</span>
+<span class="sd">        The arguments that were parsed from the speech string, as strings</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    LookatWaypointsGoal</span>
+<span class="sd">        Goal containing the one point to look at.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">string_args</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1">#have just a frame name</span>
+        <span class="n">vec3</span><span class="o">=</span><span class="n">Vector3</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">string_args</span><span class="p">)</span><span class="o">==</span><span class="mi">4</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">point</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">string_args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Invalid arguments to lookat: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string_args</span><span class="p">))</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">vec3</span><span class="o">=</span><span class="n">Vector3</span><span class="p">(</span><span class="n">point</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">point</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">point</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rospy</span><span class="o">.</span><span class="n">logerr</span><span class="p">(</span><span class="s2">&quot;Invalid arguments to lookat: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">string_args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">frame</span> <span class="o">=</span> <span class="n">string_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+ 
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">TransformStamped</span><span class="p">()</span>
+    <span class="n">pos</span><span class="o">.</span><span class="n">child_frame_id</span> <span class="o">=</span> <span class="n">frame</span>
+    <span class="n">pos</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">()</span>
+    <span class="n">pos</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">translation</span> <span class="o">=</span> <span class="n">vec3</span>
+    <span class="n">pos</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">Header</span><span class="p">()</span>
+    <span class="n">waypoints</span> <span class="o">=</span> <span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+    <span class="n">waytimes</span> <span class="o">=</span> <span class="p">[</span><span class="n">rospy</span><span class="o">.</span><span class="n">Duration</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">hlpr_lookat</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">LookatWaypointsGoal</span><span class="p">(</span><span class="n">waypoints</span><span class="p">,</span><span class="n">waytimes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_lookat_controller"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.get_lookat_controller">[docs]</a><span class="k">def</span> <span class="nf">get_lookat_controller</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Sets up the lookat controller state</span>
+
+<span class="sd">    Sets up the lookat controller state to connect to the lookat_waypoints</span>
+<span class="sd">    action server in hlpr_lookat.  Does not adjust the timing of lookat</span>
+<span class="sd">    behaviors.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">behaviors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lookat&quot;</span><span class="p">]</span>
+    <span class="n">time_adj</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">ControllerState</span><span class="p">(</span><span class="s2">&quot;LOOKAT_CONTROLLER&quot;</span><span class="p">,</span><span class="n">behaviors</span><span class="p">,</span> 
+                           <span class="s2">&quot;/lookat_waypoints_action_server&quot;</span><span class="p">,</span>
+                           <span class="n">hlpr_lookat</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">LookatWaypointsAction</span><span class="p">,</span>
+                           <span class="n">lookat_controller_cb</span><span class="p">,</span><span class="n">time_adj</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="gesture_controller_cb"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.gesture_controller_cb">[docs]</a><span class="k">def</span> <span class="nf">gesture_controller_cb</span><span class="p">(</span><span class="n">behavior_name</span><span class="p">,</span> <span class="n">string_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback to create a GestureGoal from string arguments</span>
+<span class="sd">    </span>
+<span class="sd">    Given a string of arguments (pulled from the behavior tags in a speech</span>
+<span class="sd">    string), selects the series of named keypoints that define the geature.</span>
+<span class="sd">    These keypoints are currently defined in the Gesture Action Server (in</span>
+<span class="sd">    ``gesture_action_server.py``. To add more keypoints, see the documentation</span>
+<span class="sd">    for that file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    behavior_name : str</span>
+<span class="sd">        The name of the behavior being handled (right now, this will always</span>
+<span class="sd">        be &quot;lookat&quot;)</span>
+<span class="sd">    string_args : list of str</span>
+<span class="sd">        The arguments that were parsed from the speech string, as strings</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    GestureGoal</span>
+<span class="sd">        Gesture goal containing the list of keypoints for the gesture</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">gesture_poses</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;wave&quot;</span><span class="p">:[</span><span class="s2">&quot;wave1&quot;</span><span class="p">,</span><span class="s2">&quot;wave2&quot;</span><span class="p">,</span><span class="s2">&quot;wave1&quot;</span><span class="p">,</span><span class="s2">&quot;wave2&quot;</span><span class="p">],</span>
+                     <span class="s2">&quot;shrug&quot;</span><span class="p">:[</span><span class="s2">&quot;right_home&quot;</span><span class="p">,</span><span class="s2">&quot;shrug&quot;</span><span class="p">,</span><span class="s2">&quot;right_home&quot;</span><span class="p">],</span>
+                     <span class="s2">&quot;thinking&quot;</span><span class="p">:[</span><span class="s2">&quot;right_home&quot;</span><span class="p">,</span><span class="s2">&quot;hmm&quot;</span><span class="p">,</span><span class="s2">&quot;right_home&quot;</span><span class="p">]}</span>
+    <span class="k">return</span> <span class="n">dialogue_msgs</span><span class="o">.</span><span class="n">GestureGoal</span><span class="p">(</span><span class="n">poses</span><span class="o">=</span><span class="n">gesture_poses</span><span class="p">[</span><span class="n">behavior_name</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="get_gesture_controller"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.get_gesture_controller">[docs]</a><span class="k">def</span> <span class="nf">get_gesture_controller</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Sets up the gesture controller state</span>
+
+<span class="sd">    Sets up the gesture controller state to connect to the gesture action</span>
+<span class="sd">    server in this package.  Adjusts the timing of the gesture behaviors</span>
+<span class="sd">    by 1s; you may want to change this for your application.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">behaviors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;wave&quot;</span><span class="p">,</span> <span class="s2">&quot;shrug&quot;</span><span class="p">,</span> <span class="s2">&quot;thinking&quot;</span><span class="p">]</span>
+    <span class="n">time_adj</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;wave&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="s2">&quot;shrug&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">,</span>
+                <span class="s2">&quot;thinking&quot;</span><span class="p">:</span><span class="mf">1.0</span><span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">ControllerState</span><span class="p">(</span><span class="s2">&quot;GESTURE_CONTROLLER&quot;</span><span class="p">,</span> <span class="n">behaviors</span><span class="p">,</span> <span class="s2">&quot;/HLPR_Gesture&quot;</span><span class="p">,</span>
+                           <span class="n">dialogue_msgs</span><span class="o">.</span><span class="n">GestureAction</span><span class="p">,</span>
+                           <span class="n">gesture_controller_cb</span><span class="p">,</span> <span class="n">time_adj</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_controller_cb"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.test_controller_cb">[docs]</a><span class="k">def</span> <span class="nf">test_controller_cb</span><span class="p">(</span><span class="n">behavior_name</span><span class="p">,</span> <span class="n">string_args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback to create a FibonacciGoal from string arguments</span>
+<span class="sd">    </span>
+<span class="sd">    The test action server just uses the Fibonacci goal from the</span>
+<span class="sd">    actionlib_tutorials package.  The contents of the goal are not used.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    behavior_name : str</span>
+<span class="sd">        The name of the behavior being handled (right now, this will always</span>
+<span class="sd">        be &quot;lookat&quot;)</span>
+<span class="sd">    string_args : list of str</span>
+<span class="sd">        The arguments that were parsed from the speech string, as strings</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    FibonacciGoal</span>
+<span class="sd">        Fibonacci goal with order=0; contents not used.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">actionlib_tutorials</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">FibonacciGoal</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="get_test_controller"><a class="viewcode-back" href="../../hlpr_dialogue_production.html#hlpr_dialogue_production.controllers.get_test_controller">[docs]</a><span class="k">def</span> <span class="nf">get_test_controller</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Sets up the test controller state</span>
+
+<span class="sd">    Sets up the test controller state to connect to the test action</span>
+<span class="sd">    server in this package.  Does not adjust the timing of behaviors.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">behaviors</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;test&quot;</span><span class="p">]</span>
+    <span class="n">time_adj</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;test&quot;</span><span class="p">:</span><span class="mf">0.0</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">ControllerState</span><span class="p">(</span><span class="s2">&quot;TEST_CONTROLLER&quot;</span><span class="p">,</span><span class="n">behaviors</span><span class="p">,</span><span class="s2">&quot;/test_beep_controller&quot;</span><span class="p">,</span>
+                           <span class="n">actionlib_tutorials</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">FibonacciAction</span><span class="p">,</span>
+                           <span class="n">test_controller_cb</span><span class="p">,</span> <span class="n">time_adj</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, HLP-R team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.3.
+    </div>
+  </body>
+</html>

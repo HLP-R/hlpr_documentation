@@ -31,6 +31,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
@@ -148,7 +151,7 @@
 </dl>
 </li>
 </ol>
-<p>You should hear speech through your computer speakers and see the robot move.</p>
+<p>You should hear speech through your computer speakers and see the robot move.  For more information on the options to the stand-alone action server, run <code class="docutils literal"><span class="pre">rosrun</span> <span class="pre">hlpr_dialogue_production</span> <span class="pre">standalone_server.py</span> <span class="pre">--help</span></code>.</p>
 </div>
 <div class="section" id="adding-controllers">
 <h3>Adding Controllers<a class="headerlink" href="#adding-controllers" title="Permalink to this headline">¶</a></h3>
@@ -167,103 +170,496 @@
 </div>
 <div class="section" id="code-api">
 <h2>Code API<a class="headerlink" href="#code-api" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="main-smach-wrapper-class">
-<h3>Main Smach Wrapper Class<a class="headerlink" href="#main-smach-wrapper-class" title="Permalink to this headline">¶</a></h3>
-<dl class="class">
-<dt id="hlpr_dialogue_production.dialogue.SmachWrapper">
-<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SmachWrapper</code><span class="sig-paren">(</span><em>use_tts</em>, <em>phrases=None</em>, <em>controllers=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
+<div class="section" id="module-hlpr_dialogue_production.controllers">
+<span id="controllers"></span><h3>Controllers<a class="headerlink" href="#module-hlpr_dialogue_production.controllers" title="Permalink to this headline">¶</a></h3>
+<p>Defines functions to create behavior controllers for dialogue production.</p>
+<p>This module contains functions that create controllers for each of the
+behaviors that one might want to synchronize with robot speech.  Currently,
+this includes looking at a point in space, executing a gesture with pre-
+defined waypoints, and a test controller that just plays a beeping sound (and
+can be used to check synchronization).</p>
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.gesture_controller_cb">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">gesture_controller_cb</code><span class="sig-paren">(</span><em>behavior_name</em>, <em>string_args</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#gesture_controller_cb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.gesture_controller_cb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback to create a GestureGoal from string arguments</p>
+<p>Given a string of arguments (pulled from the behavior tags in a speech
+string), selects the series of named keypoints that define the geature.
+These keypoints are currently defined in the Gesture Action Server (in
+<code class="docutils literal"><span class="pre">gesture_action_server.py</span></code>. To add more keypoints, see the documentation
+for that file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
 <tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_active_states</span></code>()</td>
-<td></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>behavior_name</strong> : str</p>
+<blockquote>
+<div><p>The name of the behavior being handled (right now, this will always
+be “lookat”)</p>
+</div></blockquote>
+<p><strong>string_args</strong> : list of str</p>
+<blockquote>
+<div><p>The arguments that were parsed from the speech string, as strings</p>
+</div></blockquote>
+</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_outcome</span></code>()</td>
-<td></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">GestureGoal</p>
+<blockquote class="last">
+<div><p>Gesture goal containing the list of keypoints for the gesture</p>
+</div></blockquote>
+</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_sm</span></code>()</td>
-<td></td>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.get_gesture_controller">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">get_gesture_controller</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#get_gesture_controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.get_gesture_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up the gesture controller state</p>
+<p>Sets up the gesture controller state to connect to the gesture action
+server in this package.  Adjusts the timing of the gesture behaviors
+by 1s; you may want to change this for your application.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.get_lookat_controller">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">get_lookat_controller</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#get_lookat_controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.get_lookat_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up the lookat controller state</p>
+<p>Sets up the lookat controller state to connect to the lookat_waypoints
+action server in hlpr_lookat.  Does not adjust the timing of lookat
+behaviors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.get_test_controller">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">get_test_controller</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#get_test_controller"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.get_test_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets up the test controller state</p>
+<p>Sets up the test controller state to connect to the test action
+server in this package.  Does not adjust the timing of behaviors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.lookat_controller_cb">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">lookat_controller_cb</code><span class="sig-paren">(</span><em>behavior_name</em>, <em>string_args</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#lookat_controller_cb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.lookat_controller_cb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback to create a LookatAction goal from string arguments</p>
+<p>Given a string of arguments (pulled from the behavior tags in a speech
+string), determines whether the robot should look at the base of the
+frame or a point relative to the frame.  Prints a warning message to the
+screen and returns None if the number of arguments is incorrect or they
+are of the wrong type, but does not check that the first argument is a
+valid frame (if it is not, the LookatWaypoints action server will return
+the error instead).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>behavior_name</strong> : str</p>
+<blockquote>
+<div><p>The name of the behavior being handled (right now, this will always
+be “lookat”)</p>
+</div></blockquote>
+<p><strong>string_args</strong> : list of str</p>
+<blockquote>
+<div><p>The arguments that were parsed from the speech string, as strings</p>
+</div></blockquote>
+</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">is_running</span></code>()</td>
-<td></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">LookatWaypointsGoal</p>
+<blockquote class="last">
+<div><p>Goal containing the one point to look at.</p>
+</div></blockquote>
+</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt</span></code>()</td>
-<td></td>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="hlpr_dialogue_production.controllers.test_controller_cb">
+<code class="descclassname">hlpr_dialogue_production.controllers.</code><code class="descname">test_controller_cb</code><span class="sig-paren">(</span><em>behavior_name</em>, <em>string_args</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/controllers.html#test_controller_cb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.controllers.test_controller_cb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback to create a FibonacciGoal from string arguments</p>
+<p>The test action server just uses the Fibonacci goal from the
+actionlib_tutorials package.  The contents of the goal are not used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>behavior_name</strong> : str</p>
+<blockquote>
+<div><p>The name of the behavior being handled (right now, this will always
+be “lookat”)</p>
+</div></blockquote>
+<p><strong>string_args</strong> : list of str</p>
+<blockquote>
+<div><p>The arguments that were parsed from the speech string, as strings</p>
+</div></blockquote>
+</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">reset</span></code>()</td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">standalone_start</span></code>()</td>
-<td></td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FibonacciGoal</p>
+<blockquote class="last">
+<div><p>Fibonacci goal with order=0; contents not used.</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 </div>
-<div class="section" id="smach-states">
-<h3>Smach States<a class="headerlink" href="#smach-states" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="main-smach-wrapper-class">
+<h3>Main Smach Wrapper Class<a class="headerlink" href="#main-smach-wrapper-class" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="hlpr_dialogue_production.dialogue.ControllerState">
-<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">ControllerState</code><span class="sig-paren">(</span><em>name</em>, <em>behaviors</em>, <em>topic</em>, <em>action_type</em>, <em>arg_list_to_goal_cb</em>, <em>behavior_time_adj=None</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#ControllerState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.ControllerState" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SmachWrapper</code><span class="sig-paren">(</span><em>use_tts</em>, <em>phrases=None</em>, <em>controllers=None</em>, <em>voice='Kimberly'</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>SmachWrapper to set up dialogue state machine</p>
+<p>Given a set of controllers, this class will put together a state machine
+that allows simultaneous speech and behaviors.  You can either run the
+state machine by calling <code class="docutils literal"><span class="pre">standalone_start</span></code> with the appropriate userdata,
+or you can call <code class="docutils literal"><span class="pre">get_sm</span></code> to get a reference to the internal state machine
+and use it as a state in a larger smach state machine.  The input keys and
+outcomes of the state machine depend on the options passed to the 
+constructor; they may include:</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>key_or_marked_text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>If a phrase file is provided and use_tts is true, or debug is true,
+provides either a key into the phrase file or marked-up text to say
+with online TTS</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>If a phrase file is provided and use_tts is false, provides a key
+into the phrase file.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>marked_text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>If no phrase file is provided and use_tts is true, contains
+marked-up text to say with online TTS</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>If no phrase file is provided and use_tts is false, or debug is true
+directly provides the behaviors for the robot to execute.  A 
+behavior has the keys “id”, “start”, and “args”.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file_loc <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>If no phrase file is provided and use_tts is false, or debug is true
+directly provides a path to an audio file for the robot to play</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Successfully played the dialogue act. This is always a potential
+outcome of the state machine.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>preempted</dt>
+<dd>The state machine was preempted.  This is always a potential outcome
+of the state machine.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>not_found</dt>
+<dd>If not using tts, indicates that the key was not found in the phrase
+file</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>missing_info</dt>
+<dd>If neither using tts nor a phrase file, indicates that the robot was
+not provided with behaviors and an audio file in the input userdata</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
-<td></td>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_active_states" title="hlpr_dialogue_production.dialogue.SmachWrapper.get_active_states"><code class="xref py py-obj docutils literal"><span class="pre">get_active_states</span></code></a>()</td>
+<td>Returns the currently-active states</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
-<td>Get a tuple of registered input keys.</td>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_outcome" title="hlpr_dialogue_production.dialogue.SmachWrapper.get_outcome"><code class="xref py py-obj docutils literal"><span class="pre">get_outcome</span></code></a>()</td>
+<td>Returns the outcome of the state machine.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
-<td>Get a list of registered outcomes.</td>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_sm" title="hlpr_dialogue_production.dialogue.SmachWrapper.get_sm"><code class="xref py py-obj docutils literal"><span class="pre">get_sm</span></code></a>()</td>
+<td>Returns the state machine</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
-<td>Get a tuple of registered output keys.</td>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.is_running" title="hlpr_dialogue_production.dialogue.SmachWrapper.is_running"><code class="xref py py-obj docutils literal"><span class="pre">is_running</span></code></a>()</td>
+<td>Returns whether the state machine is currently running</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
-<td>True if a preempt has been requested.</td>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.preempt" title="hlpr_dialogue_production.dialogue.SmachWrapper.preempt"><code class="xref py py-obj docutils literal"><span class="pre">preempt</span></code></a>()</td>
+<td>Preempt the state machine.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
-<td>Sets preempt_requested to False</td>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.reset" title="hlpr_dialogue_production.dialogue.SmachWrapper.reset"><code class="xref py py-obj docutils literal"><span class="pre">reset</span></code></a>()</td>
+<td>Reset the state machine</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
-<td>Add keys to the set of keys from which this state may read.</td>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.SmachWrapper.standalone_start" title="hlpr_dialogue_production.dialogue.SmachWrapper.standalone_start"><code class="xref py py-obj docutils literal"><span class="pre">standalone_start</span></code></a>([userdata_dict])</td>
+<td>Runs the state machine on its own.</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
-<td>Add keys to the set of keys from which this state may read and write.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
-<td>Add outcomes to the outcome set.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
-<td>Add keys to the set of keys to which this state may write.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
-<td>Sets preempt_requested to True</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
-<td>Sets preempt_requested to False</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">setup_sync</span></code>(synchronizer)</td>
-<td></td>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>use_tts</em>, <em>phrases=None</em>, <em>controllers=None</em>, <em>voice='Kimberly'</em>, <em>debug=False</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Creates a state machine according to the provided options.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>use_tts</strong> : bool</p>
+<blockquote>
+<div><p>Whether or not to use online TTS from Amazon Polly</p>
+</div></blockquote>
+<p><strong>phrases</strong> : str, optional</p>
+<blockquote>
+<div><p>Path to the phrase file to use. Defaults to None.</p>
+</div></blockquote>
+<p><strong>controllers</strong> : list of ControllerState, optional</p>
+<blockquote>
+<div><p>The set of controllers to use for speech.  If not provided, the
+state machine will play audio but no behaviors.</p>
+</div></blockquote>
+<p><strong>voice</strong> : str, optional</p>
+<blockquote>
+<div><p>Which Amazon Polly voice to use. Defaults to Kimberly</p>
+</div></blockquote>
+<p><strong>debug</strong> : bool, optional</p>
+<blockquote class="last">
+<div><p>If true, start in debug mode, with no audio or behaviors.  Defaults
+to false.</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.get_active_states">
+<code class="descname">get_active_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.get_active_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_active_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the currently-active states</p>
+<p>If the machine is running, returns all currently-active states.
+Otherwise, returns None</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of str</p>
+<blockquote class="last">
+<div><p>The names of the currently-active states</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.get_outcome">
+<code class="descname">get_outcome</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.get_outcome"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_outcome" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the outcome of the state machine.</p>
+<p>After the state machine has run to completion, this will return the
+outcome.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">str</p>
+<blockquote class="last">
+<div><p>The outcome of the state machine.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.get_sm">
+<code class="descname">get_sm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.get_sm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.get_sm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the state machine</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Trying to run the state machine multiple times can have unexpected results.  If you need to run it multiple times in various places in your code, use the <code class="docutils literal"><span class="pre">standalone_start</span></code> function.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">smach.StateMachine</p>
+<blockquote class="last">
+<div><p>A reference to the state machine constructed by this object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.is_running">
+<code class="descname">is_running</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.is_running"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.is_running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether the state machine is currently running</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">bool</p>
+<blockquote class="last">
+<div><p>Whether or not the state machine is currently running</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.preempt">
+<code class="descname">preempt</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.preempt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.preempt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Preempt the state machine.</p>
+<p>Useful in the case where the state machine is running inside an action
+server</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the state machine</p>
+<p>Resets preemption in the state machine and resets the synchronizer.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SmachWrapper.standalone_start">
+<code class="descname">standalone_start</code><span class="sig-paren">(</span><em>userdata_dict={}</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SmachWrapper.standalone_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SmachWrapper.standalone_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the state machine on its own.</p>
+<p>This function resets all states in the state machine, sets the
+userdata using the provided dictionary (be sure it matches the
+input_keys for the options you have selected), and runs the state
+machine.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>userdata_dict</strong> : dict</p>
+<blockquote class="last">
+<div><p>A dictionary of values to update the userdata.  Which values need
+to be included depends on the options you provided when creating
+this object.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="smach-states-and-related-classes">
+<h3>Smach States and Related Classes<a class="headerlink" href="#smach-states-and-related-classes" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
-<dt id="hlpr_dialogue_production.dialogue.SpeechState">
-<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SpeechState</code><span class="sig-paren">(</span><em>use_tts</em>, <em>synchronizer</em>, <em>phrases=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SpeechState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SpeechState" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dt id="hlpr_dialogue_production.dialogue.Synchronizer">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">Synchronizer</code><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#Synchronizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.Synchronizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Object that can be passed to all controllers to synchronize their start</p>
+<p>A single Synchronizer object is passed to all controllers so that the
+speech state can signal when the audio has begun to play.  This is needed
+because online text-to-speech has to download the audio from the internet
+before it can begin to play, leading to a variable start time for the
+speech audio.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.Synchronizer.reset" title="hlpr_dialogue_production.dialogue.Synchronizer.reset"><code class="xref py py-obj docutils literal"><span class="pre">reset</span></code></a>()</td>
+<td>Resets the state of the Synchronizer to not started</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.Synchronizer.start" title="hlpr_dialogue_production.dialogue.Synchronizer.start"><code class="xref py py-obj docutils literal"><span class="pre">start</span></code></a>()</td>
+<td>Sets the state of the Synchronizer to started and saves the time</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.Synchronizer.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#Synchronizer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.Synchronizer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a Synchronizer object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.Synchronizer.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#Synchronizer.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.Synchronizer.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the state of the Synchronizer to not started</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.Synchronizer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#Synchronizer.start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.Synchronizer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the state of the Synchronizer to started and saves the time</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.ControllerState">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">ControllerState</code><span class="sig-paren">(</span><em>name</em>, <em>behaviors</em>, <em>topic</em>, <em>action_type</em>, <em>arg_list_to_goal_cb</em>, <em>behavior_time_adj=None</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#ControllerState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.ControllerState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface to action servers controlling robot behavior</p>
+<p>A ControllerState is a smach.State that sends requests to a specific
+action server at the appropriate times.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">After creating the object, you <em>must</em> call <code class="docutils literal"><span class="pre">setup_sync</span></code> to    provide the state with a Synchronizer. The Synchronizer is not included in    the constructor so that the object can be created in <code class="docutils literal"><span class="pre">controllers.py</span></code> or    elsewhere in code and passed to the SmachWrapper state, which will then set    up the Synchronizers and assemble the dialogue act state machine.</p>
+</div>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>ordered_behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>An ordered list of all the behaviors the controller should play. A
+behavior is a dict with keys “start”, “id”, and “args”, indicating
+the start time (after speech begins), name of the behavior, and any
+arguments to the behavior, respectively.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>preempted</dt>
+<dd>The behavior was preempted before playing all the behaviors in the list
+to completion.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>The controller played all of the behaviors in the list.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -306,14 +702,134 @@
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
 <td>Sets preempt_requested to False</td>
 </tr>
+<tr class="row-odd"><td><a class="reference internal" href="#hlpr_dialogue_production.dialogue.ControllerState.setup_sync" title="hlpr_dialogue_production.dialogue.ControllerState.setup_sync"><code class="xref py py-obj docutils literal"><span class="pre">setup_sync</span></code></a>(synchronizer)</td>
+<td>Provides the controller with a Synchronizer object</td>
+</tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.ControllerState.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>behaviors</em>, <em>topic</em>, <em>action_type</em>, <em>arg_list_to_goal_cb</em>, <em>behavior_time_adj=None</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#ControllerState.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.ControllerState.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Creates the ControllerState with the given name, able to handle the
+given behaviors by sending the arguments to the arg_list_to_goal_cb
+with a time adjustment factor of behavior_time_adj (assigned on a per-
+behavior basis).  By convention, the name should be in all caps, and
+must not conflict with any other names in the state machine containing
+this state.  If using the SmachWrapper, the names “SPEECH”, “START”,
+“DIALOGUE” are taken.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : str</p>
+<blockquote>
+<div><p>The name of this state in the state machine</p>
+</div></blockquote>
+<p><strong>behaviors</strong> : list of str</p>
+<blockquote>
+<div><p>The behaviors (from the speech string tags) that this controller
+can handle</p>
+</div></blockquote>
+<p><strong>topic</strong> : str</p>
+<blockquote>
+<div><p>The topic for the action server that this controller calls</p>
+</div></blockquote>
+<p><strong>action_type</strong> : ROS Action Type</p>
+<blockquote>
+<div><p>The type for the action server that this controller calls</p>
+</div></blockquote>
+<p><strong>arg_list_to_goal_cb</strong> : function</p>
+<blockquote>
+<div><p>A function taking the name of the behavior and a list of arguments
+and returning a goal for the action of type <code class="docutils literal"><span class="pre">action_type</span></code></p>
+</div></blockquote>
+<p><strong>behavior_time_adj</strong> : dict</p>
+<blockquote class="last">
+<div><p>A mapping from behavior names (from <code class="docutils literal"><span class="pre">behaviors</span></code>) to times (in s).
+The controller will send the action goal that much earlier.
+Negative values will cause the controller to call the action
+server later.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.ControllerState.setup_sync">
+<code class="descname">setup_sync</code><span class="sig-paren">(</span><em>synchronizer</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#ControllerState.setup_sync"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.ControllerState.setup_sync" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provides the controller with a Synchronizer object</p>
+<p>This provides the controller with information about when the speech
+audio has begun.  This will only work if the controller and speech
+state share the same Synchronizer object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>synchronizer</strong> : Synchronizer</p>
+<blockquote class="last">
+<div><p>A synchronizer object.  All controllers, including the speech state,
+should share the same synchronizer.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="hlpr_dialogue_production.dialogue.TTSSpeechStart">
 <em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">TTSSpeechStart</code><span class="sig-paren">(</span><em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#TTSSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSSpeechStart" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dd><p>Speech prep state when using TTS</p>
+<p>State to process marked text to ordered behaviors, unmarked text, and an
+empty wav_file, that can be passed on to the Speech state.</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>marked_text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to
+the word following the tag.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Output keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to
+the word following the tag.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ordered_behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>A list of behavior dictionaries.  A behavior has the keys “id”,
+“start”, and “args”. Ordered by start time.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Always None</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Finished fetching behaviors</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -358,12 +874,81 @@
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.TTSSpeechStart.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#TTSSpeechStart.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSSpeechStart.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Initializes TTS for speech using Amazon Polly with the given voice</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>voice</strong> : str, optional</p>
+<blockquote class="last">
+<div><p>Which Amazon Polly voice to use. Defaults to Kimberly</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart">
 <em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">TTSFallbackSpeechStart</code><span class="sig-paren">(</span><em>phrases</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#TTSFallbackSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dd><p>Speech prep from file with online TTS fallback</p>
+<p>State to read text, wave file, and ordered behaviors from a phrase file,
+given a key into that file. If the key isn’t found, uses online TTS using
+Amazon Polly.  This is useful for debugging or if there are a small number
+of phrases that can’t be known in advance.</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>key_or_marked_text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Either a key into the phrase file or text marked up with
+&lt;behavior tags&gt;.  The state tries to read from the phrase file
+with this string.  If it’s not found, assume it is marked up text
+and generate the audio with TTS</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Output keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Text marked up with &lt;behavior tags&gt;.  Behaviors will be synced to
+the word following the tag.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ordered_behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>A list of behavior dictionaries.  A behavior has the keys “id”,
+“start”, and “args”. Ordered by start time.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>None if the audio needs to be fetched, otherwise the path to the
+audio file.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Finished fetching behaviors</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -408,12 +993,85 @@
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>phrases</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#TTSFallbackSpeechStart.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.TTSFallbackSpeechStart.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Initializes TTS for speech using Amazon Polly with the given voice, and
+reads in the phrase file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>voice</strong> : str, optional</p>
+<blockquote>
+<div><p>Which Amazon Polly voice to use. Defaults to Kimberly</p>
+</div></blockquote>
+<p><strong>phrases</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to the phrase file to use.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="hlpr_dialogue_production.dialogue.FileSpeechStart">
 <em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">FileSpeechStart</code><span class="sig-paren">(</span><em>phrases</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#FileSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.FileSpeechStart" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dd><p>Speech prep from file</p>
+<p>State to read text, wave file, and ordered behaviors from a phrase file,
+given a key into that file.</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>key <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>A key into the phrase file</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Output keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>If the text is included in the phrase file, the text, otherwise
+None</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ordered_behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>A list of behavior dictionaries.  A behavior has the keys “id”,
+“start”, and “args”.  Ordered by start time.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>The path to the audio file.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Finished fetching behaviors</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>not_found</dt>
+<dd>Unable to find the key in the phrase file</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -455,15 +1113,93 @@
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
 <td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.FileSpeechStart.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>phrases</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#FileSpeechStart.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.FileSpeechStart.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Initializes TTS for speech using a phrase file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>phrases</strong> : str</p>
+<blockquote class="last">
+<div><p>Path to the phrase file to use.</p>
+</div></blockquote>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
+</dd></dl>
+
 <dl class="class">
 <dt id="hlpr_dialogue_production.dialogue.NoPrepSpeechStart">
 <em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">NoPrepSpeechStart</code><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#NoPrepSpeechStart"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.NoPrepSpeechStart" title="Permalink to this definition">¶</a></dt>
-<dd><p class="rubric">Methods</p>
+<dd><p>Pass through speech info without prep</p>
+<p>State for the case where the dialogue state machine will be given text,
+behaviors (not necessarily ordered), and a path to a wave file in
+the userdata.</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd><blockquote class="first">
+<div><p>A list of behavior dictionaries.  A behavior has the keys “id”,</p>
+</div></blockquote>
+<p class="last">“start”, and “args”.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file_loc <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">The path to the audio file to play</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Output keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Always None</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>ordered_behaviors <span class="classifier-delimiter">:</span> <span class="classifier">list of dict</span></dt>
+<dd>A list of behavior dictionaries.  A behavior has the keys “id”,
+“start”, and “args”. Ordered by start time.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>The path to the audio file.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Finished fetching behaviors</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>missing_info</dt>
+<dd>Missing information in the input keys</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -508,6 +1244,141 @@
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.NoPrepSpeechStart.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#NoPrepSpeechStart.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.NoPrepSpeechStart.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Initializes passthrough state for speech features.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="hlpr_dialogue_production.dialogue.SpeechState">
+<em class="property">class </em><code class="descclassname">hlpr_dialogue_production.dialogue.</code><code class="descname">SpeechState</code><span class="sig-paren">(</span><em>use_tts</em>, <em>synchronizer</em>, <em>phrases=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SpeechState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SpeechState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Speech player state</p>
+<p>Takes in text and/or a wave file.  Given a wave file, plays the file.
+If no wave file is provided and text-to-speech is on, fetch the audio from
+Amazon Polly and play the audio.  If no wave file is provided and text-to-
+speech is off, return “no_audio”</p>
+<dl class="docutils">
+<dt><strong>Input keys</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>text <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Can be None; the text version of the robot’s speech.  Used to print
+to the screen.</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>wav_file <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>Can be None if TTS is on. The path to the audio file.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>Outcomes</strong></dt>
+<dd><ul class="first last simple">
+<li><dl class="first docutils">
+<dt>done</dt>
+<dd>Finished fetching behaviors</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>no_audio</dt>
+<dd>Couldn’t find the wave file, or no wave file provided and TTS
+turned off</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>preempted</dt>
+<dd>State was preempted before audio finished playing.  If preempted,
+will try to stop the audio.</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">execute</span></code>(userdata)</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_input_keys</span></code>()</td>
+<td>Get a tuple of registered input keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_outcomes</span></code>()</td>
+<td>Get a list of registered outcomes.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">get_registered_output_keys</span></code>()</td>
+<td>Get a tuple of registered output keys.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">preempt_requested</span></code>()</td>
+<td>True if a preempt has been requested.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">recall_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_input_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_io_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys from which this state may read and write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">register_outcomes</span></code>(new_outcomes)</td>
+<td>Add outcomes to the outcome set.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">register_output_keys</span></code>(keys)</td>
+<td>Add keys to the set of keys to which this state may write.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">request_preempt</span></code>()</td>
+<td>Sets preempt_requested to True</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">service_preempt</span></code>()</td>
+<td>Sets preempt_requested to False</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hlpr_dialogue_production.dialogue.SpeechState.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>use_tts</em>, <em>synchronizer</em>, <em>phrases=None</em>, <em>voice='Kimberly'</em><span class="sig-paren">)</span><a class="reference internal" href="modules/hlpr_dialogue_production/dialogue.html#SpeechState.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hlpr_dialogue_production.dialogue.SpeechState.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructor</p>
+<p>Initializes the speech state with the desired parameters; either with
+or without online TTS, and with or without a pre-generated phrase
+file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>use_tts</strong> : bool</p>
+<blockquote>
+<div><p>If true, allow online TTS</p>
+</div></blockquote>
+<p><strong>synchronizer</strong> : Synchronizer</p>
+<blockquote>
+<div><p>Synchronizer object to allow sync of speech and behaviors.  Should
+be the same object as is passed to behavior ControllerState objects
+with <code class="docutils literal"><span class="pre">setup_sync</span></code></p>
+</div></blockquote>
+<p><strong>voice</strong> : str, optional</p>
+<blockquote>
+<div><p>Which Amazon Polly voice to use. Defaults to Kimberly</p>
+</div></blockquote>
+<p><strong>phrases</strong> : str, optional</p>
+<blockquote class="last">
+<div><p>Path to the phrase file to use. If None, require online TTS.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -529,8 +1400,9 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#code-api">Code API</a><ul>
+<li><a class="reference internal" href="#module-hlpr_dialogue_production.controllers">Controllers</a></li>
 <li><a class="reference internal" href="#main-smach-wrapper-class">Main Smach Wrapper Class</a></li>
-<li><a class="reference internal" href="#smach-states">Smach States</a><ul>
+<li><a class="reference internal" href="#smach-states-and-related-classes">Smach States and Related Classes</a><ul>
 </ul>
 </li>
 </ul>
@@ -566,6 +1438,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">HLP-R Codebase Documentation 0.0 documentation</a> &#187;</li> 
       </ul>
     </div>
